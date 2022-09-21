@@ -7,16 +7,19 @@
 #include <nw4r/g3d/g3d_anmtexsrt.h>
 #include <nw4r/g3d/g3d_anmvis.h>
 
-class gfModelAnimation {
+class gfModelAnimation
+{
 public:
     char _spacer[8];
 
-    AnmObjVisRes* anmObjVisRes;
-    AnmObjChrRes* anmObjChrRes;
-    AnmObjTexPatRes* anmObjTexPatRes;
-    AnmObjTexSrtRes* anmObjTexSrtRes;
-    AnmObjMatClrRes* anmObjMatClrRes;
-    AnmObjShpRes* anmObjShpRes;
+    AnmObjVisRes *anmObjVisRes;
+    AnmObjChrRes *anmObjChrRes;
+    AnmObjTexPatRes *anmObjTexPatRes;
+    AnmObjTexSrtRes *anmObjTexSrtRes;
+    AnmObjMatClrRes *anmObjMatClrRes;
+    AnmObjShpRes *anmObjShpRes;
+
+    void setUpdateRate(double rate);
 };
 
 // Size: 32

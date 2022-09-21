@@ -2,19 +2,21 @@
 
 #include <types.h>
 
-namespace nw4r { namespace g3d {
-
-
-// NOTE:
-// This is supposed to be a class, 
-// but until we know ResFile's size
-// we can treat it as an opaque pointer
-struct ResFile
+namespace nw4r
 {
-    /* data */
-};
+    namespace g3d
+    {
 
-u32 GetResMdlNumEntries(ResFile** file); 
+        // NOTE:
+        // This is supposed to be a class,
+        // but until we know ResFile's size
+        // we can treat it as an opaque pointer
+        struct ResFile
+        {
+            /* data */
+            static void Init(void *arg);
+        };
+        u32 GetResMdlNumEntries(ResFile **file);
 
-} // namespace g3d
-} // namespace nw4 
+    } // namespace g3d
+} // namespace nw4
