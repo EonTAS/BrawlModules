@@ -8,7 +8,9 @@
 #include "printf.h"
 #include "mu/mu_menu.h"
 #include <gf/gf_model.h>
+#include <gf/gf_heap_manager.h>
 #include <string.h>
+#include <nw4r/g3d/g3d_scnmdl.h>
 
 const scriptEntry typeVoiceLines[] = {{-1, 0}, {-1, 0}, {0x203F, 0x27}, {0x2040, 0x31}};
 static muObjectFlags mapFileList[] = {
@@ -122,7 +124,7 @@ void muIntroTask::createMuObjects(muObjectFlags data[], int num, nw4r::g3d::ResF
          char *str1 = "";
          strcpy(str1, currData.node);
          strcat(str1, "__0");
-         result->changeAnimM(str1);
+         result->changeAnimN(str1);
          if (result->gfModelAnimation != 0)
          {
             result->gfModelAnimation->setUpdateRate(0.0);
@@ -234,9 +236,171 @@ void muIntroTask::loadCharModel()
    }
    this->resfiles[1] = (nw4r::g3d::ResFile *)buffer;
    this->createMuObjects(panelList, 1, this->resfiles[1]);
+   ScnMdl::Construct(gfHeapManager::getMEMAllocator(MenuInstance), 0, 0xD, this->muObjects[2]->test);
 
-   Construct(getMemAllocator(MenuInstance), 0, 0xD, this->muObjects[2] + 0x10)
+   if (this->mode == teams)
+   {
+      char *str1 = "";
+      char *str2 = "";
+      char *str3 = "";
+      this->getEnemyResFileName(str1, str2, str3, this->enemies[0].charId, standardFighter);
+      buffer = 0;
+      if (this->files[2]->getReturnStatus() != 0x15)
+      {
+         buffer = this->files[2]->getBuffer();
+         this->files[2]->release();
+      }
+      if (buffer != 0)
+      {
+         nw4r::g3d::ResFile::Init(buffer);
+      }
+      this->resfiles[2] = (nw4r::g3d::ResFile *)buffer;
+      this->createMuObjects(panelList, 1, this->resfiles[2]);
+      for (int i = 0; i <= 10; i++)
+      {
+         MuObject *newMu = MuObject::create(this->resfiles[2], 0x1C - i, 0, 0, MenuInstance);
+         newMu->changeNodeAnimN(str2);
+         // newMu.functioncall(1.0)
+         newMu->changeClrAnimN(str2);
+         float style;
+         if (i == 0)
+         {
+            style = 1.0;
+         }
+         else
+         {
+            style = 0.0;
+         }
+         // newMu.functioncall(style)
+         newMu->changeVisAnimN(str3);
+         newMu->setFrameVisible(3.0);
+         // newMu.functioncall(0.0)
+      }
+   }
+   else if (this->mode == standard)
+   {
+      for (int i = 0; i < this->enemyCount; i++)
+      {
+         buffer = 0;
+         gfFileIOHandle *file = this->files[2 + i];
+         if (file->getReturnStatus() != 0x15)
+         {
+            buffer = file->getBuffer();
+            file->release();
+         }
+         if (buffer != 0)
+         {
+            nw4r::g3d::ResFile::Init(buffer);
+         }
+         this->resfiles[2 + i] = (nw4r::g3d::ResFile *)buffer;
+         char *str1 = "";
+         char *str2 = "";
+         char *str3 = "";
+         this->getEnemyResFileName(str1, str2, str3, this->enemies[i].charId, this->enemies[i].displayId);
+         MuObject *newMu = MuObject::create(this->resfiles[2 + i], 0x1C - i, 0, 0, MenuInstance);
+
+         newMu->changeNodeAnimN(str2);
+         // newMu.functioncall(1.0)
+         newMu->changeClrAnimN(str2);
+         // newMu.functioncall(1.0)
+         newMu->changeVisAnimN(str3);
+         int enemyCount = this->enemyCount;
+         double targetFrame;
+         if (enemyCount == 2)
+         {
+            if (i == 0)
+            {
+               targetFrame = 1.0;
+            }
+            else
+            {
+               targetFrame = 2.0;
+            }
+         }
+         else if (enemyCount == 1)
+         {
+            targetFrame = 3.0;
+         }
+         else
+         {
+            targetFrame = 0;
+         }
+         newMu->setFrameVisible(targetFrame);
+         // newMu.functioncall(0.0)
+      }
+   }
+   // allies loop
+   if (this->mode != breakTheTargets)
+   {
+      for (int i = 0; i < this->allyCount; i++)
+      {
+         buffer = 0;
+         gfFileIOHandle *file = this->files[6 + i];
+         if (file->getReturnStatus() != 0x15)
+         {
+            buffer = file->getBuffer();
+            file->release();
+         }
+         if (buffer != 0)
+         {
+            nw4r::g3d::ResFile::Init(buffer);
+         }
+         this->resfiles[6 + i] = (nw4r::g3d::ResFile *)buffer;
+         char *str1 = "";
+         char *str2 = "";
+         char *str3 = "";
+         int displayType;
+         this->getEnemyResFileName(str1, str2, str3, this->allies[i].charId, this->allies[i].displayId);
+         MuObject *newMu = MuObject::create(this->resfiles[6 + i], 0x1C - i, 0, 0, MenuInstance);
+
+         newMu->changeNodeAnimN(str2);
+         // newMu.functioncall(1.0)
+         newMu->changeClrAnimN(str2);
+         // newMu.functioncall(1.0)
+         newMu->changeVisAnimN(str3);
+         newMu->setFrameVisible(5.0);
+         // newMu.functioncall(0.0)
+      }
+   }
+   // continue at line 283
+   int startingNode;
+   int totalEnemies;
+   if (this->mode == teams)
+   {
+      startingNode = 10;
+      totalEnemies = 10;
+   }
+   else if (this->mode == breakTheTargets)
+   {
+      startingNode = 0;
+      totalEnemies = 0;
+   }
+   else
+   {
+      totalEnemies = this->enemyCount;
+      if (totalEnemies == 2)
+      {
+         startingNode = 1;
+      }
+      else
+      {
+         startingNode = 0;
+      }
+   }
+   for (int i = 0; i < totalEnemies; i++)
+   {
+      char *targetString = "";
+      sprintf(targetString, "pos%02d", startingNode + i);
+      // PushBack();
+   }
+   for (int i = 0; i < this->allyCount; i++)
+   {
+      char *targetString = "";
+      sprintf(targetString, "pos%02d", 0x1E + i);
+      // PushBack();
+   }
 }
+
 void muIntroTask::createCharModel()
 {
    if (this->mode == breakTheTargets)

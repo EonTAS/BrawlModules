@@ -45,7 +45,7 @@ class muIntroTask : public gfTask
 {
 protected:
     // 0x40
-    nw4r::g3d::ResFile resfiles[10];
+    nw4r::g3d::ResFile *resfiles[10];
     char paddingagain[0x1C];
     // 0x60
     MuObject *muObjects[10];
