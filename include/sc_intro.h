@@ -16,4 +16,7 @@ public:
     int allyCount;
     fighter enemies[3];
     fighter allies[2];
+    // someOffset
+    // offset 0x398
+    int somethingWithObjectAt0x48;
 };

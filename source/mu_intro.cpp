@@ -67,7 +67,7 @@ muIntroTask *muIntroTask::create()
 
 void muIntroTask::processDefault()
 {
-   if (soundScriptStarted == 0)
+   if (this->soundScriptStarted == 0)
    {
       bool ready = true;
       for (int i = 0; i < 8; i++)
@@ -102,7 +102,40 @@ void muIntroTask::processDefault()
          {
             this->loadCharModel();
          }
+         else
+         {
+            // btt too lazy right now
+         }
+         // gfGameApplication->gfKeepFramebuffer->endKeepScreen();
+         char *str = "";
+         sprintf(str, "ItrSimpleMap0000_TopN__%d", this->progression + 1);
+         MuObject *currentMu = 0;
+         currentMu->changeNodeAnimNIf(str);
+         currentMu->changeVisAnimNIf(str);
+         currentMu->changeTexPatAnimNIf(str);
+         currentMu->changeClrAnimNIf(str);
+         currentMu->gfModelAnimation->setUpdateRate(1.0);
+         gfSceneManager *manager = gfSceneManager::getInstance();
+         scIntro *_intro = (scIntro *)manager->currentScene;
+         _intro->somethingWithObjectAt0x48; // dosomething
+
+         if (this->mode != breakTheTargets)
+         {
+         }
+         else
+         {
+         }
+
+         // get scene and check rumble
+         // startRumble
+         // playSE
+         this->commonFilePre = 0;
+         this->soundScriptStarted = 1;
       }
+   }
+   else
+   {
+      // run script
    }
 }
 
@@ -236,7 +269,7 @@ void muIntroTask::loadCharModel()
    }
    this->resfiles[1] = (nw4r::g3d::ResFile *)buffer;
    this->createMuObjects(panelList, 1, this->resfiles[1]);
-   ScnMdl::Construct(gfHeapManager::getMEMAllocator(MenuInstance), 0, 0xD, this->muObjects[2]->test);
+   ScnMdl::Construct(gfHeapManager::getMEMAllocator(MenuInstance), 0, 0xD, this->muObjects[2]->gfModelAnimation);
 
    if (this->mode == teams)
    {
@@ -391,13 +424,13 @@ void muIntroTask::loadCharModel()
    {
       char *targetString = "";
       sprintf(targetString, "pos%02d", startingNode + i);
-      // PushBack();
+      ScnMdl::Pushback(this->ScnMdlExpandThing, this->enemyMdlThing[i], targetString);
    }
    for (int i = 0; i < this->allyCount; i++)
    {
       char *targetString = "";
       sprintf(targetString, "pos%02d", 0x1E + i);
-      // PushBack();
+      ScnMdl::Pushback(this->ScnMdlExpandThing, this->allyMdlThing[i], targetString);
    }
 }
 

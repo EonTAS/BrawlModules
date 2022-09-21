@@ -49,6 +49,10 @@ protected:
     char paddingagain[0x1C];
     // 0x60
     MuObject *muObjects[10];
+
+    void *enemyMdlThing[3];
+    void *allyMdlThing[2];
+    void *ScnMdlExpandThing;
     // 0xAC
     int progression;
     modeType mode;
