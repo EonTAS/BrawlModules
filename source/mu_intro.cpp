@@ -11,6 +11,8 @@
 #include <gf/gf_heap_manager.h>
 #include <string.h>
 #include <nw4r/g3d/g3d_scnmdl.h>
+#include <gf/gf_game_application.h>
+#include <snd_system.h>
 
 const scriptEntry typeVoiceLines[] = {{-1, 0}, {-1, 0}, {0x203F, 0x27}, {0x2040, 0x31}};
 static muObjectFlags mapFileList[] = {
@@ -65,6 +67,8 @@ muIntroTask *muIntroTask::create()
    return intro;
 }
 
+extern gfGameApplication *g_gfGameApplication;
+extern sndSystem *g_sndSystem;
 void muIntroTask::processDefault()
 {
    if (this->soundScriptStarted == 0)
@@ -106,7 +110,7 @@ void muIntroTask::processDefault()
          {
             // btt too lazy right now
          }
-         // gfGameApplication->gfKeepFramebuffer->endKeepScreen();
+         g_gfGameApplication->keepFB->endKeepScreen();
          char *str = "";
          sprintf(str, "ItrSimpleMap0000_TopN__%d", this->progression + 1);
          MuObject *currentMu = 0;
@@ -115,27 +119,47 @@ void muIntroTask::processDefault()
          currentMu->changeTexPatAnimNIf(str);
          currentMu->changeClrAnimNIf(str);
          currentMu->gfModelAnimation->setUpdateRate(1.0);
-         gfSceneManager *manager = gfSceneManager::getInstance();
-         scIntro *_intro = (scIntro *)manager->currentScene;
+         scIntro *_intro = (scIntro *)gfSceneManager::getInstance()->currentScene;
          _intro->somethingWithObjectAt0x48; // dosomething
 
          if (this->mode != breakTheTargets)
          {
+            setProgressionMeter(this->progression);
          }
          else
          {
+            // btt stuff idk
          }
-
-         // get scene and check rumble
-         // startRumble
-         // playSE
+         int rumble = _intro->globalRumbleSetting;
+         if (rumble == 0x78)
+         {
+            rumble = -1;
+         }
+         _intro->startRumbleController(0x14, rumble);
+         g_sndSystem->playSE(0x2b, -1, 0, 0, -1);
          this->commonFilePre = 0;
          this->soundScriptStarted = 1;
       }
    }
    else
    {
-      // run script
+      scriptEntry *currentVoiceLine = &this->script[scriptCurrent];
+      if (this->voiceLineCurrentTime == 0)
+      {
+         g_sndSystem->playSERem(currentVoiceLine->id, -1, 0, 0, -1); // 0, 11, loc_805A01D0 -> 0, 4, sndSystem__playSERem
+      }
+      this->voiceLineCurrentTime++;
+      if (this->voiceLineCurrentTime >= currentVoiceLine->length)
+      {
+         this->voiceLineCurrentTime = 0;
+         this->scriptCurrent++;
+      }
+      if (this->scriptCurrent >= this->scriptCount)
+      {
+         scIntro *_intro = (scIntro *)gfSceneManager::getInstance()->currentScene;
+         //_intro->done = 0;  // 0x284
+         //_intro->done2 = 2; // 0x288
+      }
    }
 }
 
@@ -488,9 +512,13 @@ void muIntroTask::getEnemyResFileName(char *str1, char *str2, char *str3, int fi
    sprintf(str3, "ItrSimple%s%04d_TopN__0", "Chr", fighterFileId);
 }
 
+void muIntroTask::setProgressionMeter(int progression)
+{
+}
+
 inline void muIntroTask::addScriptEntry(int id, int length)
 {
-   this->script[this->scriptCount].id = id;
-   this->script[this->scriptCount].length = length;
-   this->scriptCount++;
+   scriptEntry *script = &this->script[this->scriptCount++];
+   script->id = id;
+   script->length = length;
 }

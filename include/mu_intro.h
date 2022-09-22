@@ -80,6 +80,7 @@ protected:
     // 0x18C
     int scriptCount;
     int scriptCurrent;
+    int voiceLineCurrentTime;
 
 public:
     muIntroTask();
@@ -94,7 +95,7 @@ public:
     void createCharModel();
     void loadCharModel();
     void createMuObjects(muObjectFlags data[], int num, nw4r::g3d::ResFile *resFile);
-    // personal ease of use code
+    void setProgressionMeter(int progression);
     inline void addScriptEntry(int ID, int length);
     virtual void processDefault();
     virtual ~muIntroTask();

@@ -1,9 +1,14 @@
 #pragma once
 
-#include <memory.h>
+#include <gf/gf_task.h>
 
-class gfKeepFramebuffer
+class gfKeepFrameBuffer
 {
+
+private:
 public:
     void endKeepScreen();
+    void startKeepScreen();
+    void render();
+    void update();
 };

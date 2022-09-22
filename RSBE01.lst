@@ -1,5 +1,6 @@
 // global variables
 805a0148: g_ecMgr
+80590000: g_gfGameApplication
 
 // System
 8000c8ac:__nw__FUl
