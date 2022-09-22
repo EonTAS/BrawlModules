@@ -15,7 +15,7 @@ include $(DEVKITPPC)/wii_rules
 # SOURCES is a list of directories containing source code
 # INCLUDES is a list of directories containing extra header files
 #---------------------------------------------------------------------------------
-TARGET		:=	mu_intro
+TARGET		:=	sora_menu_intro
 RELID		:=  13
 BUILD		:=	build
 SOURCES		:=	source $(wildcard source/*) lib/PowerPC_EABI_Support/Runtime/Src

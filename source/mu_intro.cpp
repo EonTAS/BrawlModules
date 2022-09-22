@@ -6,7 +6,7 @@
 #include <OSError.h>
 #include <gf/gf_scene_manager.h>
 #include "printf.h"
-#include "mu/mu_menu.h"
+#include <mu/mu_menu.h>
 #include <gf/gf_model.h>
 #include <gf/gf_heap_manager.h>
 #include <string.h>
@@ -24,32 +24,11 @@ static muObjectFlags panelList[] = {
     {"ItrSimplePanel0002_TopN", {0x3, 0x3, 0x1F, 0x0}},
     {"ItrSimplePanel0010_TopN", {0xF, 0xF, 0x20, 0x0}},
 };
-muIntroTask::muIntroTask() : gfTask("Intro", 8, 0xf, 8, 1)
-{
-   // start of this is a bunch of gfTask nonsense im not dealing with
-   // this->taskName = "";
-   // this->next = nullptr;
-   // this->prev = nullptr;
-   // if (this->unk_0xC < this->unk_0x14) {
-   //
-   //}
-   for (int i = 0; i < 8; i++)
-   {
-      this->files[i] = new muFileIOHandle();
-   }
-}
-muIntroTask::~muIntroTask()
-{
-   for (int i = 0; i < 8; i++)
-   {
-      delete this->files[i];
-   }
-}
 muIntroTask *muIntroTask::create()
 {
    muIntroTask *intro = new (MenuInstance) muIntroTask();
    intro->getStageSetting();
-   gfFileIOHandle::readRequest(intro->files[0], "/menu/intro/enter/cmn.brres", MenuResource, 0, 0);
+   gfFileIOHandle::readRequest(*intro->files[0], "/menu/intro/enter/cmn.brres", MenuResource, 0, 0);
    if (intro->mode != breakTheTargets)
    {
       intro->createCharModel();
@@ -58,7 +37,7 @@ muIntroTask *muIntroTask::create()
    {
       char *filename = "";
       sprintf(filename, "/menu/intro/enter/mini%d.brres", intro->mode + 1);
-      gfFileIOHandle::readRequest(intro->files[5], filename, MenuResource, 0, 0);
+      gfFileIOHandle::readRequest(*intro->files[5], filename, MenuResource, 0, 0);
    }
    muMenu::loadMenuSound();
    intro->commonFilePre = 0;
@@ -113,15 +92,14 @@ void muIntroTask::processDefault()
          g_gfGameApplication->keepFB->endKeepScreen();
          char *str = "";
          sprintf(str, "ItrSimpleMap0000_TopN__%d", this->progression + 1);
-         MuObject *currentMu = 0;
+         MuObject *currentMu = this->muObjects[0];
          currentMu->changeNodeAnimNIf(str);
          currentMu->changeVisAnimNIf(str);
          currentMu->changeTexPatAnimNIf(str);
          currentMu->changeClrAnimNIf(str);
          currentMu->gfModelAnimation->setUpdateRate(1.0);
          scIntro *_intro = (scIntro *)gfSceneManager::getInstance()->currentScene;
-         _intro->somethingWithObjectAt0x48; // dosomething
-
+         _intro->menuRoot->scene->Insert(_intro->menuRoot->scene->mainScene, currentMu->scnObj);
          if (this->mode != breakTheTargets)
          {
             setProgressionMeter(this->progression);
@@ -130,12 +108,12 @@ void muIntroTask::processDefault()
          {
             // btt stuff idk
          }
-         int rumble = _intro->globalRumbleSetting;
+         int rumble = _intro->rumbleSetting;
          if (rumble == 0x78)
          {
             rumble = -1;
          }
-         _intro->startRumbleController(0x14, rumble);
+         muMenu::startRumbleController(_intro->activeController, 0x14, rumble);
          g_sndSystem->playSE(0x2b, -1, 0, 0, -1);
          this->commonFilePre = 0;
          this->soundScriptStarted = 1;
@@ -146,7 +124,7 @@ void muIntroTask::processDefault()
       scriptEntry *currentVoiceLine = &this->script[scriptCurrent];
       if (this->voiceLineCurrentTime == 0)
       {
-         g_sndSystem->playSERem(currentVoiceLine->id, -1, 0, 0, -1); // 0, 11, loc_805A01D0 -> 0, 4, sndSystem__playSERem
+         g_sndSystem->playSE(currentVoiceLine->id, -1, 0, 0, -1);
       }
       this->voiceLineCurrentTime++;
       if (this->voiceLineCurrentTime >= currentVoiceLine->length)
@@ -293,7 +271,7 @@ void muIntroTask::loadCharModel()
    }
    this->resfiles[1] = (nw4r::g3d::ResFile *)buffer;
    this->createMuObjects(panelList, 1, this->resfiles[1]);
-   ScnMdl::Construct(gfHeapManager::getMEMAllocator(MenuInstance), 0, 0xD, this->muObjects[2]->gfModelAnimation);
+   this->scnMdl = ScnMdl::Construct(gfHeapManager::getMEMAllocator(MenuInstance), 0, 0xD, this->muObjects[2]->gfModelAnimation);
 
    if (this->mode == teams)
    {
@@ -313,7 +291,7 @@ void muIntroTask::loadCharModel()
       }
       this->resfiles[2] = (nw4r::g3d::ResFile *)buffer;
       this->createMuObjects(panelList, 1, this->resfiles[2]);
-      for (int i = 0; i <= 10; i++)
+      for (int i = 0; i < 11; i++)
       {
          MuObject *newMu = MuObject::create(this->resfiles[2], 0x1C - i, 0, 0, MenuInstance);
          newMu->changeNodeAnimN(str2);
@@ -425,7 +403,7 @@ void muIntroTask::loadCharModel()
    if (this->mode == teams)
    {
       startingNode = 10;
-      totalEnemies = 10;
+      totalEnemies = 11;
    }
    else if (this->mode == breakTheTargets)
    {
@@ -448,13 +426,13 @@ void muIntroTask::loadCharModel()
    {
       char *targetString = "";
       sprintf(targetString, "pos%02d", startingNode + i);
-      ScnMdl::Pushback(this->ScnMdlExpandThing, this->enemyMdlThing[i], targetString);
+      ScnMdl::Pushback(this->scnMdl, this->muObjects[4 + i], targetString);
    }
    for (int i = 0; i < this->allyCount; i++)
    {
       char *targetString = "";
       sprintf(targetString, "pos%02d", 0x1E + i);
-      ScnMdl::Pushback(this->ScnMdlExpandThing, this->allyMdlThing[i], targetString);
+      ScnMdl::Pushback(this->scnMdl, this->muObjects[2 + i], targetString);
    }
 }
 
@@ -464,7 +442,7 @@ void muIntroTask::createCharModel()
    {
       return;
    }
-   gfFileIOHandle::readRequest(this->files[1], "/menu/intro/enter/chrcmn.brres", MenuResource, 0, 0);
+   gfFileIOHandle::readRequest(*this->files[1], "/menu/intro/enter/chrcmn.brres", MenuResource, 0, 0);
    if (this->mode == teams)
    {
       char *str1 = "";
@@ -472,7 +450,7 @@ void muIntroTask::createCharModel()
       char *str3 = "";
       fighter enemy = this->enemies[0];
       this->getEnemyResFileName(str1, str2, str3, enemy.charId, standardFighter);
-      gfFileIOHandle::readRequest(this->files[2], str1, MenuInstance, 0, 0);
+      gfFileIOHandle::readRequest(*this->files[2], str1, MenuInstance, 0, 0);
    }
    else
    {
@@ -482,7 +460,7 @@ void muIntroTask::createCharModel()
          char *str2 = "";
          char *str3 = "";
          this->getEnemyResFileName(str1, str2, str3, this->enemies[i].charId, this->enemies[i].displayId);
-         gfFileIOHandle::readRequest(this->files[2 + i], str1, MenuInstance, 0, 0);
+         gfFileIOHandle::readRequest(*this->files[2 + i], str1, MenuInstance, 0, 0);
       }
    }
    for (int i = 0; i < this->allyCount; i++)
@@ -491,7 +469,7 @@ void muIntroTask::createCharModel()
       char *str2 = "";
       char *str3 = "";
       this->getEnemyResFileName(str1, str2, str3, this->allies[i].charId, this->allies[i].displayId);
-      gfFileIOHandle::readRequest(this->files[6 + i], str1, MenuInstance, 0, 0);
+      gfFileIOHandle::readRequest(*this->files[6 + i], str1, MenuInstance, 0, 0);
    }
 }
 
@@ -521,4 +499,39 @@ inline void muIntroTask::addScriptEntry(int id, int length)
    scriptEntry *script = &this->script[this->scriptCount++];
    script->id = id;
    script->length = length;
+}
+
+muIntroTask::muIntroTask() : gfTask("Intro", 8, 0xf, 8, 1)
+{
+   for (int i = 0; i < 0x12; i++)
+   {
+      this->muObjects[i] = 0;
+   }
+   this->scnMdl = 0;
+   for (int i = 0; i < 8; i++)
+   {
+      this->files[i] = 0;
+   }
+   this->scriptCurrent = 0;
+   this->scriptCount = 0;
+   this->commonFilePre = 0;
+   this->voiceLineCurrentTime = 0;
+}
+muIntroTask::~muIntroTask()
+{
+   for (int i = 0; i < 8; i++)
+   {
+      delete &this->files[i];
+   }
+}
+bool muIntroTask::isLoadFinished()
+{
+   for (int i = 0; i < 8; i++)
+   {
+      if (!this->files[i]->isReady()) // <-this is the current place of problems, this is checking with the pointer containing it, not the actual file
+      {
+         return false;
+      }
+   }
+   return muMenu::isLoadFinishMenuSound();
 }

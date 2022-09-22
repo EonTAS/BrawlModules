@@ -2,7 +2,7 @@
 
 #include <types.h>
 #include <st/st_melee.h>
-#include <mu/mu_file_io_handle.h>
+#include "mu_file_io_handle.h"
 #include <nw4r/g3d/g3d_resfile.h>
 #include <mu/mu_object.h>
 
@@ -45,14 +45,12 @@ class muIntroTask : public gfTask
 {
 protected:
     // 0x40
-    nw4r::g3d::ResFile *resfiles[10];
-    char paddingagain[0x1C];
+    nw4r::g3d::ResFile *resfiles[3];
+    char paddingagain[0x14];
     // 0x60
-    MuObject *muObjects[10];
+    MuObject *muObjects[0x12];
 
-    void *enemyMdlThing[3];
-    void *allyMdlThing[2];
-    void *ScnMdlExpandThing;
+    ScnMdl *scnMdl;
     // 0xAC
     int progression;
     modeType mode;
@@ -90,13 +88,13 @@ public:
     void createObjResFile();
     void getEnemyResFileName(char *str1, char *str2, char *str3, int fighterId, int fighterDisplayType);
     void getStageSetting();
-    bool isLoadFinished();
     void makeSoundScript();
     void createCharModel();
     void loadCharModel();
     void createMuObjects(muObjectFlags data[], int num, nw4r::g3d::ResFile *resFile);
     void setProgressionMeter(int progression);
     inline void addScriptEntry(int ID, int length);
+    bool isLoadFinished();
     virtual void processDefault();
     virtual ~muIntroTask();
 };

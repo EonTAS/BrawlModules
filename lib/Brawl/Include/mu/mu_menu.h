@@ -3,10 +3,11 @@
 class muMenu
 {
 public:
-    int globalRumbleSetting;
+    //    int activeRumbleController;
+    //    int globalRumbleSetting;
 
     static void loadMenuSound();
     static bool isLoadFinishMenuSound();
     static int exchangeSelchkind2SelCharVoice(int id);
-    void startRumbleController(int rumbleSetting);
+    static void startRumbleController(int controller, int rumbleStrength, int rumbleSetting);
 };

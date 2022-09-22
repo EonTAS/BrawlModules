@@ -9,5 +9,4 @@ class sndSystem
 private:
 public:
     void playSE(int sndID, int unk, int unk2, int unk3, int unk4);
-    void playSERem(int sndID, int unk, int unk2, int unk3, int unk4);
 };
