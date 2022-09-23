@@ -9,7 +9,7 @@
 
 #include <nw4r/g3d/g3d_scnmdl.h>
 
-class gfModelAnimation : public ScnMdl
+class gfModelAnimation
 {
 public:
     char _spacer[8];

@@ -35,7 +35,7 @@ muIntroTask *muIntroTask::create()
    }
    else
    {
-      char *filename = "";
+      char filename[32];
       sprintf(filename, "/menu/intro/enter/mini%d.brres", intro->mode + 1);
       intro->files[5].readRequest(filename, MenuResource, 0, 0);
    }
@@ -79,7 +79,7 @@ void muIntroTask::processDefault()
          }
          this->resFiles[0] = (nw4r::g3d::ResFile *)buffer;
 
-         this->createMuObjects(mapFileList, 4, &this->resFiles[0]);
+         this->createMuObjects(mapFileList, 1, &this->resFiles[0]);
 
          if (this->mode != breakTheTargets)
          {
@@ -89,8 +89,8 @@ void muIntroTask::processDefault()
          {
             // btt too lazy right now
          }
-         g_gfGameApplication->keepFB->endKeepScreen();
-         char *str = "";
+         g_gfGameApplication->keepFB.endKeepScreen();
+         char str[32];
          sprintf(str, "ItrSimpleMap0000_TopN__%d", this->progression + 1);
          MuObject *currentMu = this->muObjects[0];
          currentMu->changeNodeAnimNIf(str);
@@ -99,7 +99,7 @@ void muIntroTask::processDefault()
          currentMu->changeClrAnimNIf(str);
          currentMu->gfModelAnimation->setUpdateRate(1.0);
          scIntro *_intro = (scIntro *)gfSceneManager::getInstance()->currentScene;
-         _intro->menuRoot->scene->Insert(_intro->menuRoot->scene->mainScene, currentMu->scnObj);
+         (*_intro->menuRoot)->scene->Insert((*_intro->menuRoot)->scene->mainScene, currentMu->scnObj); //****
          if (this->mode != breakTheTargets)
          {
             setProgressionMeter(this->progression);
@@ -156,7 +156,8 @@ void muIntroTask::createMuObjects(muObjectFlags data[], int num, nw4r::g3d::ResF
       {
          MuObject *result = MuObject::create(resFile, currData.node, currData.flags[2], 0, MenuInstance);
          this->muObjects[currData.flags[0] + j] = result;
-         char *str1 = "";
+
+         char str1[32];
          strcpy(str1, currData.node);
          strcat(str1, "__0");
          result->changeAnimN(str1);
@@ -275,9 +276,10 @@ void muIntroTask::loadCharModel()
 
    if (this->mode == teams)
    {
-      char *str1 = "";
-      char *str2 = "";
-      char *str3 = "";
+
+      char str1[32];
+      char str2[32];
+      char str3[32];
       this->getEnemyResFileName(str1, str2, str3, this->enemies[0].charId, standardFighter);
       buffer = 0;
       if (this->files[2].getReturnStatus() != 0x15)
@@ -290,12 +292,12 @@ void muIntroTask::loadCharModel()
          nw4r::g3d::ResFile::Init(&buffer);
       }
       this->resFiles[2] = (nw4r::g3d::ResFile *)buffer;
-      this->createMuObjects(panelList, 1, &this->resFiles[2]);
+      this->createMuObjects(panelList, 4, &this->resFiles[2]);
       for (int i = 0; i < 11; i++)
       {
          MuObject *newMu = MuObject::create(&this->resFiles[2], 0x1C - i, 0, 0, MenuInstance);
          newMu->changeNodeAnimN(str2);
-         // newMu.functioncall(1.0)
+         newMu->gfModelAnimation->anmObjChrRes->SetUpdateRate(1.0);
          newMu->changeClrAnimN(str2);
          float style;
          if (i == 0)
@@ -306,10 +308,10 @@ void muIntroTask::loadCharModel()
          {
             style = 0.0;
          }
-         // newMu.functioncall(style)
+         newMu->gfModelAnimation->anmObjMatClrRes->SetUpdateFrame(style);
          newMu->changeVisAnimN(str3);
          newMu->setFrameVisible(3.0);
-         // newMu.functioncall(0.0)
+         newMu->gfModelAnimation->anmObjVisRes->SetUpdateFrame(0.0);
       }
    }
    else if (this->mode == standard)
@@ -317,27 +319,27 @@ void muIntroTask::loadCharModel()
       for (int i = 0; i < this->enemyCount; i++)
       {
          buffer = 0;
-         gfFileIOHandle *file = &this->files[2 + i];
-         if (file->getReturnStatus() != 0x15)
+         if (this->files[2 + i].getReturnStatus() != 0x15)
          {
-            buffer = file->getBuffer();
-            file->release();
+            buffer = this->files[2 + i].getBuffer();
+            this->files[2 + i].release();
          }
          if (buffer != 0)
          {
             nw4r::g3d::ResFile::Init(&buffer);
          }
          this->resFiles[2 + i] = (nw4r::g3d::ResFile *)buffer;
-         char *str1 = "";
-         char *str2 = "";
-         char *str3 = "";
+
+         char str1[32];
+         char str2[32];
+         char str3[32];
          this->getEnemyResFileName(str1, str2, str3, this->enemies[i].charId, this->enemies[i].displayId);
          MuObject *newMu = MuObject::create(&this->resFiles[2 + i], 0x1C - i, 0, 0, MenuInstance);
 
          newMu->changeNodeAnimN(str2);
-         // newMu.functioncall(1.0)
+         newMu->gfModelAnimation->anmObjChrRes->SetUpdateRate(1.0);
          newMu->changeClrAnimN(str2);
-         // newMu.functioncall(1.0)
+         newMu->gfModelAnimation->anmObjMatClrRes->SetUpdateFrame(1.0);
          newMu->changeVisAnimN(str3);
          int enemyCount = this->enemyCount;
          double targetFrame;
@@ -361,7 +363,7 @@ void muIntroTask::loadCharModel()
             targetFrame = 0;
          }
          newMu->setFrameVisible(targetFrame);
-         // newMu.functioncall(0.0)
+         newMu->gfModelAnimation->anmObjVisRes->SetUpdateFrame(0.0);
       }
    }
    // allies loop
@@ -370,31 +372,30 @@ void muIntroTask::loadCharModel()
       for (int i = 0; i < this->allyCount; i++)
       {
          buffer = 0;
-         gfFileIOHandle *file = &this->files[6 + i];
-         if (file->getReturnStatus() != 0x15)
+         if (this->files[6 + i].getReturnStatus() != 0x15)
          {
-            buffer = file->getBuffer();
-            file->release();
+            buffer = this->files[6 + i].getBuffer();
+            this->files[6 + i].release();
          }
          if (buffer != 0)
          {
             nw4r::g3d::ResFile::Init(&buffer);
          }
          this->resFiles[6 + i] = (nw4r::g3d::ResFile *)buffer;
-         char *str1 = "";
-         char *str2 = "";
-         char *str3 = "";
-         int displayType;
+
+         char str1[32];
+         char str2[32];
+         char str3[32];
          this->getEnemyResFileName(str1, str2, str3, this->allies[i].charId, this->allies[i].displayId);
          MuObject *newMu = MuObject::create(&this->resFiles[6 + i], 0x1C - i, 0, 0, MenuInstance);
 
          newMu->changeNodeAnimN(str2);
-         // newMu.functioncall(1.0)
+         newMu->gfModelAnimation->anmObjChrRes->SetUpdateRate(1.0);
          newMu->changeClrAnimN(str2);
-         // newMu.functioncall(1.0)
+         newMu->gfModelAnimation->anmObjMatClrRes->SetUpdateFrame(1.0);
          newMu->changeVisAnimN(str3);
          newMu->setFrameVisible(5.0);
-         // newMu.functioncall(0.0)
+         newMu->gfModelAnimation->anmObjVisRes->SetUpdateFrame(0.0);
       }
    }
    // continue at line 283
@@ -445,9 +446,9 @@ void muIntroTask::createCharModel()
    this->files[1].readRequest("/menu/intro/enter/chrcmn.brres", MenuResource, 0, 0);
    if (this->mode == teams)
    {
-      char *str1 = "";
-      char *str2 = "";
-      char *str3 = "";
+      char str1[32];
+      char str2[32];
+      char str3[32];
       fighter enemy = this->enemies[0];
       this->getEnemyResFileName(str1, str2, str3, enemy.charId, standardFighter);
       this->files[2].readRequest(str1, MenuInstance, 0, 0);
@@ -456,18 +457,18 @@ void muIntroTask::createCharModel()
    {
       for (int i = 0; i < this->enemyCount; i++)
       {
-         char *str1 = "";
-         char *str2 = "";
-         char *str3 = "";
+         char str1[32];
+         char str2[32];
+         char str3[32];
          this->getEnemyResFileName(str1, str2, str3, this->enemies[i].charId, this->enemies[i].displayId);
          this->files[2 + i].readRequest(str1, MenuInstance, 0, 0);
       }
    }
    for (int i = 0; i < this->allyCount; i++)
    {
-      char *str1 = "";
-      char *str2 = "";
-      char *str3 = "";
+      char str1[32];
+      char str2[32];
+      char str3[32];
       this->getEnemyResFileName(str1, str2, str3, this->allies[i].charId, this->allies[i].displayId);
       this->files[6 + i].readRequest(str1, MenuInstance, 0, 0);
    }
@@ -485,7 +486,7 @@ void muIntroTask::getEnemyResFileName(char *str1, char *str2, char *str3, int fi
       displayType = 2;
    }
    int fighterFileId = fighterId + 1; // convertFighterID(fighterId);
-   sprintf(str1, "/menu/intro/enter/%s%04d.bress", "chr", fighterFileId);
+   sprintf(str1, "/menu/intro/enter/%s%04d.brres", "chr", fighterFileId);
    sprintf(str2, "ItrSimple%s%04d_TopN__%d", "Chr", fighterFileId, displayType);
    sprintf(str3, "ItrSimple%s%04d_TopN__0", "Chr", fighterFileId);
 }

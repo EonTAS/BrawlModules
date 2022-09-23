@@ -7,6 +7,6 @@ class gfGameApplication
 {
 public:
     char unk[0xD0];
-    gfKeepFrameBuffer *keepFB;
+    gfKeepFrameBuffer keepFB;
     gfGameApplication();
 };

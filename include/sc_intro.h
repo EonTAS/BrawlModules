@@ -19,17 +19,17 @@ public:
     // 0x8
     muMenuController menuControllers[5];
     // 0x350
-    char _spacer[0xC];
+    char _spacer[0x14];
     int progression;
     modeType mode;
     int enemyCount;
-    int allyCount;
     fighter enemies[3];
+    int allyCount;
     fighter allies[2];
     // offset 0x398
     // 0x394
     int activeController;
-    MenuRoot *menuRoot;
+    MenuRoot **menuRoot;
     char isCameraReady;
     char rumbleSetting;
     char spacers[2];

@@ -55,8 +55,8 @@ protected:
     int progression;
     modeType mode;
     int enemyCount;
-    int allyCount;
     fighter enemies[totalEnemies];
+    int allyCount;
     fighter allies[totalAllies];
     // 0xE4
     int commonFilePre;

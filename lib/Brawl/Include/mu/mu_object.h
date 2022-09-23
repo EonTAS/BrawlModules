@@ -8,9 +8,9 @@ class MuObject
 public:
     char unk[0x10]; // this is 0x60 in size
     ScnObj *scnObj;
+    gfModelAnimation *gfModelAnimation;
     char unk2[0x4C];
 
-    gfModelAnimation *gfModelAnimation;
     static MuObject *create(nw4r::g3d::ResFile **output, char *node, char flag, int otherflag, HeapType type);
     static MuObject *create(nw4r::g3d::ResFile **output, int node, char flag, int otherflag, HeapType type);
     void changeAnimN(char *animName);
