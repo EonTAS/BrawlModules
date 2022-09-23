@@ -52,6 +52,9 @@
 803f0bdc:__construct_array
 803f0cd4:__destroy_arr
 
+// TRK 
+80403664:TRK_flush_cache__Fii
+
 //gfFileIO
 80020b38:__dt__14gfFileIOHandleFv
 80020b98:setNotify__14gfFileIOHandleFv

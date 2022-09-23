@@ -13,6 +13,7 @@
 #include <nw4r/g3d/g3d_scnmdl.h>
 #include <gf/gf_game_application.h>
 #include <snd_system.h>
+#include <flush_cache.h>
 
 const scriptEntry typeVoiceLines[] = {{-1, 0}, {-1, 0}, {0x203F, 0x27}, {0x2040, 0x31}};
 static muObjectFlags mapFileList[] = {
@@ -36,13 +37,27 @@ muIntroTask *muIntroTask::create()
    else
    {
       char filename[32];
-      sprintf(filename, "/menu/intro/enter/mini%d.brres", intro->mode + 1);
+      sprintf(filename, "/menu/intro/enter/mini%d.brres", 1);
       intro->files[5].readRequest(filename, MenuResource, 0, 0);
    }
    muMenu::loadMenuSound();
    intro->commonFilePre = 0;
    intro->soundScriptStarted = 0;
    intro->makeSoundScript();
+
+   { // dumb fuckery to make the game use the right function coz i cant edit the reloc's of other rels
+      bool (muIntroTask::*checkLoad)() = &muIntroTask::isLoadFinished;
+      unsigned int instruction = 0x48000001; // base `bl` instruction
+      int volatile *const targetAddress = (int *)0x806C0738;
+      int volatile functionAddress = 0;
+      __asm__("lwz %[functionAddress],0x8(%[checkLoad])"
+              : [functionAddress] "=r"(functionAddress)
+              : [checkLoad] "r"(&checkLoad));
+      instruction += functionAddress - (int)targetAddress; // add offset to instruction
+      *targetAddress = instruction;
+      TRK_flush_cache((int)(targetAddress - 4), (int)(targetAddress + 4));
+   }
+
    return intro;
 }
 
@@ -87,7 +102,18 @@ void muIntroTask::processDefault()
          }
          else
          {
-            // btt too lazy right now
+            buffer = 0;
+            if (this->files[5].getReturnStatus() != 0x15)
+            {
+               buffer = this->files[5].getBuffer();
+               this->files[5].release();
+            }
+            if (buffer != 0)
+            {
+               nw4r::g3d::ResFile::Init(&buffer);
+            }
+            this->resFiles[7] = (nw4r::g3d::ResFile *)buffer;
+            this->muObjects[4] = MuObject::create(&this->resFiles[7], 18, (char)0, 0, MenuInstance);
          }
          g_gfGameApplication->keepFB.endKeepScreen();
          char str[32];
@@ -99,14 +125,18 @@ void muIntroTask::processDefault()
          currentMu->changeClrAnimNIf(str);
          currentMu->gfModelAnimation->setUpdateRate(1.0);
          scIntro *_intro = (scIntro *)gfSceneManager::getInstance()->currentScene;
-         (*_intro->menuRoot)->scene->Insert((*_intro->menuRoot)->scene->sceneItemsCount, currentMu->scnObj); //****
+         (*_intro->menuRoot)->scene->Insert((*_intro->menuRoot)->scene->sceneItemsCount, currentMu->scnObj);
          if (this->mode != breakTheTargets)
          {
             setProgressionMeter(this->progression);
          }
          else
          {
-            // btt stuff idk
+            this->muObjects[4]->gfModelAnimation->anmObjChrRes->SetUpdateRate(1.0);
+            this->muObjects[4]->gfModelAnimation->anmObjMatClrRes->SetUpdateFrame(1.0);
+            scIntro *_intro = (scIntro *)gfSceneManager::getInstance()->currentScene;
+            ScnGroup *scene = (*_intro->menuRoot)->scene;
+            scene->Insert(scene->sceneItemsCount, this->muObjects[4]->scnObj);
          }
          int rumble = _intro->rumbleSetting;
          if (rumble == 0x78)
