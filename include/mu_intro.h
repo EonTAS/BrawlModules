@@ -91,7 +91,7 @@ public:
     void makeSoundScript();
     void createCharModel();
     void loadCharModel();
-    void createMuObjects(muObjectFlags data[], int num, nw4r::g3d::ResFile resFile[]);
+    void createMuObjects(muObjectFlags data[], int num, nw4r::g3d::ResFile **resFile);
     void setProgressionMeter(int progression);
     inline void addScriptEntry(int ID, int length);
     bool isLoadFinished();

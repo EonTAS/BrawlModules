@@ -79,7 +79,7 @@ void muIntroTask::processDefault()
          }
          this->resFiles[0] = (nw4r::g3d::ResFile *)buffer;
 
-         this->createMuObjects(mapFileList, 1, this->resFiles[0]);
+         this->createMuObjects(mapFileList, 4, &this->resFiles[0]);
 
          if (this->mode != breakTheTargets)
          {
@@ -141,7 +141,7 @@ void muIntroTask::processDefault()
    }
 }
 
-void muIntroTask::createMuObjects(muObjectFlags data[], int num, nw4r::g3d::ResFile *resFile)
+void muIntroTask::createMuObjects(muObjectFlags data[], int num, nw4r::g3d::ResFile **resFile)
 {
    for (int i = 0; i < num; i++)
    {
@@ -267,11 +267,11 @@ void muIntroTask::loadCharModel()
    }
    if (buffer != 0)
    {
-      nw4r::g3d::ResFile::Init(buffer);
+      nw4r::g3d::ResFile::Init(&buffer);
    }
    this->resFiles[1] = (nw4r::g3d::ResFile *)buffer;
-   this->createMuObjects(panelList, 1, this->resFiles[1]);
-   this->scnMdl = ScnMdl::Construct(gfHeapManager::getMEMAllocator(MenuInstance), 0, 0xD, this->muObjects[2]->gfModelAnimation);
+   this->createMuObjects(panelList, 4, &this->resFiles[1]);
+   this->scnMdl = ScnMdl::Construct(gfHeapManager::getMEMAllocator(MenuInstance), 0, 0xD, this->muObjects[2]->scnObj);
 
    if (this->mode == teams)
    {
@@ -287,13 +287,13 @@ void muIntroTask::loadCharModel()
       }
       if (buffer != 0)
       {
-         nw4r::g3d::ResFile::Init(buffer);
+         nw4r::g3d::ResFile::Init(&buffer);
       }
       this->resFiles[2] = (nw4r::g3d::ResFile *)buffer;
-      this->createMuObjects(panelList, 1, this->resFiles[2]);
+      this->createMuObjects(panelList, 1, &this->resFiles[2]);
       for (int i = 0; i < 11; i++)
       {
-         MuObject *newMu = MuObject::create(this->resFiles[2], 0x1C - i, 0, 0, MenuInstance);
+         MuObject *newMu = MuObject::create(&this->resFiles[2], 0x1C - i, 0, 0, MenuInstance);
          newMu->changeNodeAnimN(str2);
          // newMu.functioncall(1.0)
          newMu->changeClrAnimN(str2);
@@ -325,14 +325,14 @@ void muIntroTask::loadCharModel()
          }
          if (buffer != 0)
          {
-            nw4r::g3d::ResFile::Init(buffer);
+            nw4r::g3d::ResFile::Init(&buffer);
          }
          this->resFiles[2 + i] = (nw4r::g3d::ResFile *)buffer;
          char *str1 = "";
          char *str2 = "";
          char *str3 = "";
          this->getEnemyResFileName(str1, str2, str3, this->enemies[i].charId, this->enemies[i].displayId);
-         MuObject *newMu = MuObject::create(this->resFiles[2 + i], 0x1C - i, 0, 0, MenuInstance);
+         MuObject *newMu = MuObject::create(&this->resFiles[2 + i], 0x1C - i, 0, 0, MenuInstance);
 
          newMu->changeNodeAnimN(str2);
          // newMu.functioncall(1.0)
@@ -378,7 +378,7 @@ void muIntroTask::loadCharModel()
          }
          if (buffer != 0)
          {
-            nw4r::g3d::ResFile::Init(buffer);
+            nw4r::g3d::ResFile::Init(&buffer);
          }
          this->resFiles[6 + i] = (nw4r::g3d::ResFile *)buffer;
          char *str1 = "";
@@ -386,7 +386,7 @@ void muIntroTask::loadCharModel()
          char *str3 = "";
          int displayType;
          this->getEnemyResFileName(str1, str2, str3, this->allies[i].charId, this->allies[i].displayId);
-         MuObject *newMu = MuObject::create(this->resFiles[6 + i], 0x1C - i, 0, 0, MenuInstance);
+         MuObject *newMu = MuObject::create(&this->resFiles[6 + i], 0x1C - i, 0, 0, MenuInstance);
 
          newMu->changeNodeAnimN(str2);
          // newMu.functioncall(1.0)
