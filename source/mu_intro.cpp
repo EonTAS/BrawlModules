@@ -28,7 +28,7 @@ muIntroTask *muIntroTask::create()
 {
    muIntroTask *intro = new (MenuInstance) muIntroTask();
    intro->getStageSetting();
-   gfFileIOHandle::readRequest(*intro->files[0], "/menu/intro/enter/cmn.brres", MenuResource, 0, 0);
+   intro->files[0].readRequest("/menu/intro/enter/cmn.brres", MenuResource, 0, 0);
    if (intro->mode != breakTheTargets)
    {
       intro->createCharModel();
@@ -37,7 +37,7 @@ muIntroTask *muIntroTask::create()
    {
       char *filename = "";
       sprintf(filename, "/menu/intro/enter/mini%d.brres", intro->mode + 1);
-      gfFileIOHandle::readRequest(*intro->files[5], filename, MenuResource, 0, 0);
+      intro->files[5].readRequest(filename, MenuResource, 0, 0);
    }
    muMenu::loadMenuSound();
    intro->commonFilePre = 0;
@@ -55,7 +55,7 @@ void muIntroTask::processDefault()
       bool ready = true;
       for (int i = 0; i < 8; i++)
       {
-         if (!this->files[i]->isReady())
+         if (!this->files[i].isReady())
          {
             ready = false;
             break;
@@ -68,18 +68,18 @@ void muIntroTask::processDefault()
       if (ready)
       {
          void *buffer = 0;
-         if (this->files[0]->getReturnStatus() != 0x15)
+         if (this->files[0].getReturnStatus() != 0x15)
          {
-            buffer = this->files[0]->getBuffer();
-            this->files[0]->release();
+            buffer = this->files[0].getBuffer();
+            this->files[0].release();
          }
          if (buffer != 0)
          {
-            nw4r::g3d::ResFile::Init(buffer);
+            nw4r::g3d::ResFile::Init(&buffer);
          }
-         this->resfiles[0] = (nw4r::g3d::ResFile *)buffer;
+         this->resFiles[0] = (nw4r::g3d::ResFile *)buffer;
 
-         this->createMuObjects(mapFileList, 1, this->resfiles[0]);
+         this->createMuObjects(mapFileList, 1, this->resFiles[0]);
 
          if (this->mode != breakTheTargets)
          {
@@ -260,17 +260,17 @@ void muIntroTask::makeSoundScript()
 void muIntroTask::loadCharModel()
 {
    void *buffer = 0;
-   if (this->files[1]->getReturnStatus() != 0x15)
+   if (this->files[1].getReturnStatus() != 0x15)
    {
-      buffer = this->files[1]->getBuffer();
-      this->files[1]->release();
+      buffer = this->files[1].getBuffer();
+      this->files[1].release();
    }
    if (buffer != 0)
    {
       nw4r::g3d::ResFile::Init(buffer);
    }
-   this->resfiles[1] = (nw4r::g3d::ResFile *)buffer;
-   this->createMuObjects(panelList, 1, this->resfiles[1]);
+   this->resFiles[1] = (nw4r::g3d::ResFile *)buffer;
+   this->createMuObjects(panelList, 1, this->resFiles[1]);
    this->scnMdl = ScnMdl::Construct(gfHeapManager::getMEMAllocator(MenuInstance), 0, 0xD, this->muObjects[2]->gfModelAnimation);
 
    if (this->mode == teams)
@@ -280,20 +280,20 @@ void muIntroTask::loadCharModel()
       char *str3 = "";
       this->getEnemyResFileName(str1, str2, str3, this->enemies[0].charId, standardFighter);
       buffer = 0;
-      if (this->files[2]->getReturnStatus() != 0x15)
+      if (this->files[2].getReturnStatus() != 0x15)
       {
-         buffer = this->files[2]->getBuffer();
-         this->files[2]->release();
+         buffer = this->files[2].getBuffer();
+         this->files[2].release();
       }
       if (buffer != 0)
       {
          nw4r::g3d::ResFile::Init(buffer);
       }
-      this->resfiles[2] = (nw4r::g3d::ResFile *)buffer;
-      this->createMuObjects(panelList, 1, this->resfiles[2]);
+      this->resFiles[2] = (nw4r::g3d::ResFile *)buffer;
+      this->createMuObjects(panelList, 1, this->resFiles[2]);
       for (int i = 0; i < 11; i++)
       {
-         MuObject *newMu = MuObject::create(this->resfiles[2], 0x1C - i, 0, 0, MenuInstance);
+         MuObject *newMu = MuObject::create(this->resFiles[2], 0x1C - i, 0, 0, MenuInstance);
          newMu->changeNodeAnimN(str2);
          // newMu.functioncall(1.0)
          newMu->changeClrAnimN(str2);
@@ -317,7 +317,7 @@ void muIntroTask::loadCharModel()
       for (int i = 0; i < this->enemyCount; i++)
       {
          buffer = 0;
-         gfFileIOHandle *file = this->files[2 + i];
+         gfFileIOHandle *file = &this->files[2 + i];
          if (file->getReturnStatus() != 0x15)
          {
             buffer = file->getBuffer();
@@ -327,12 +327,12 @@ void muIntroTask::loadCharModel()
          {
             nw4r::g3d::ResFile::Init(buffer);
          }
-         this->resfiles[2 + i] = (nw4r::g3d::ResFile *)buffer;
+         this->resFiles[2 + i] = (nw4r::g3d::ResFile *)buffer;
          char *str1 = "";
          char *str2 = "";
          char *str3 = "";
          this->getEnemyResFileName(str1, str2, str3, this->enemies[i].charId, this->enemies[i].displayId);
-         MuObject *newMu = MuObject::create(this->resfiles[2 + i], 0x1C - i, 0, 0, MenuInstance);
+         MuObject *newMu = MuObject::create(this->resFiles[2 + i], 0x1C - i, 0, 0, MenuInstance);
 
          newMu->changeNodeAnimN(str2);
          // newMu.functioncall(1.0)
@@ -370,7 +370,7 @@ void muIntroTask::loadCharModel()
       for (int i = 0; i < this->allyCount; i++)
       {
          buffer = 0;
-         gfFileIOHandle *file = this->files[6 + i];
+         gfFileIOHandle *file = &this->files[6 + i];
          if (file->getReturnStatus() != 0x15)
          {
             buffer = file->getBuffer();
@@ -380,13 +380,13 @@ void muIntroTask::loadCharModel()
          {
             nw4r::g3d::ResFile::Init(buffer);
          }
-         this->resfiles[6 + i] = (nw4r::g3d::ResFile *)buffer;
+         this->resFiles[6 + i] = (nw4r::g3d::ResFile *)buffer;
          char *str1 = "";
          char *str2 = "";
          char *str3 = "";
          int displayType;
          this->getEnemyResFileName(str1, str2, str3, this->allies[i].charId, this->allies[i].displayId);
-         MuObject *newMu = MuObject::create(this->resfiles[6 + i], 0x1C - i, 0, 0, MenuInstance);
+         MuObject *newMu = MuObject::create(this->resFiles[6 + i], 0x1C - i, 0, 0, MenuInstance);
 
          newMu->changeNodeAnimN(str2);
          // newMu.functioncall(1.0)
@@ -442,7 +442,7 @@ void muIntroTask::createCharModel()
    {
       return;
    }
-   gfFileIOHandle::readRequest(*this->files[1], "/menu/intro/enter/chrcmn.brres", MenuResource, 0, 0);
+   this->files[1].readRequest("/menu/intro/enter/chrcmn.brres", MenuResource, 0, 0);
    if (this->mode == teams)
    {
       char *str1 = "";
@@ -450,7 +450,7 @@ void muIntroTask::createCharModel()
       char *str3 = "";
       fighter enemy = this->enemies[0];
       this->getEnemyResFileName(str1, str2, str3, enemy.charId, standardFighter);
-      gfFileIOHandle::readRequest(*this->files[2], str1, MenuInstance, 0, 0);
+      this->files[2].readRequest(str1, MenuInstance, 0, 0);
    }
    else
    {
@@ -460,7 +460,7 @@ void muIntroTask::createCharModel()
          char *str2 = "";
          char *str3 = "";
          this->getEnemyResFileName(str1, str2, str3, this->enemies[i].charId, this->enemies[i].displayId);
-         gfFileIOHandle::readRequest(*this->files[2 + i], str1, MenuInstance, 0, 0);
+         this->files[2 + i].readRequest(str1, MenuInstance, 0, 0);
       }
    }
    for (int i = 0; i < this->allyCount; i++)
@@ -469,7 +469,7 @@ void muIntroTask::createCharModel()
       char *str2 = "";
       char *str3 = "";
       this->getEnemyResFileName(str1, str2, str3, this->allies[i].charId, this->allies[i].displayId);
-      gfFileIOHandle::readRequest(*this->files[6 + i], str1, MenuInstance, 0, 0);
+      this->files[6 + i].readRequest(str1, MenuInstance, 0, 0);
    }
 }
 
@@ -510,7 +510,7 @@ muIntroTask::muIntroTask() : gfTask("Intro", 8, 0xf, 8, 1)
    this->scnMdl = 0;
    for (int i = 0; i < 8; i++)
    {
-      this->files[i] = 0;
+      this->files[i] = muFileIOHandle();
    }
    this->scriptCurrent = 0;
    this->scriptCount = 0;
@@ -519,16 +519,16 @@ muIntroTask::muIntroTask() : gfTask("Intro", 8, 0xf, 8, 1)
 }
 muIntroTask::~muIntroTask()
 {
-   for (int i = 0; i < 8; i++)
-   {
-      delete &this->files[i];
-   }
+   // for (int i = 0; i < 8; i++)
+   //{
+   //    delete &this->files[i];
+   // }
 }
 bool muIntroTask::isLoadFinished()
 {
    for (int i = 0; i < 8; i++)
    {
-      if (!this->files[i]->isReady()) // <-this is the current place of problems, this is checking with the pointer containing it, not the actual file
+      if (!this->files[i].isReady()) // <-this is the current place of problems, this is checking with the pointer containing it, not the actual file
       {
          return false;
       }

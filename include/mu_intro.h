@@ -45,7 +45,7 @@ class muIntroTask : public gfTask
 {
 protected:
     // 0x40
-    nw4r::g3d::ResFile *resfiles[3];
+    nw4r::g3d::ResFile *resFiles[3];
     char paddingagain[0x14];
     // 0x60
     MuObject *muObjects[0x12];
@@ -60,7 +60,7 @@ protected:
     fighter allies[totalAllies];
     // 0xE4
     int commonFilePre;
-    muFileIOHandle *files[8];
+    muFileIOHandle files[8];
     //// 0xE8
     // gfFileIOHandle commonFile;
     //// 0xEC
@@ -91,7 +91,7 @@ public:
     void makeSoundScript();
     void createCharModel();
     void loadCharModel();
-    void createMuObjects(muObjectFlags data[], int num, nw4r::g3d::ResFile *resFile);
+    void createMuObjects(muObjectFlags data[], int num, nw4r::g3d::ResFile resFile[]);
     void setProgressionMeter(int progression);
     inline void addScriptEntry(int ID, int length);
     bool isLoadFinished();

@@ -8,12 +8,18 @@ class gfFileIOHandle
 {
 public:
     // 0
-    gfFileIORequest *request;
-    static int readRequest(gfFileIOHandle &output, char *filename, HeapType heap, int length, int offset);
+    gfFileIORequest *fileToLoad;
+    int readRequest(char *filename, HeapType heap, int length, int offset);
     bool isReady();
     int getReturnStatus();
     void *getBuffer();
     void release();
-
-    ~gfFileIOHandle();
+    gfFileIOHandle()
+    {
+        fileToLoad = 0;
+    }
+    ~gfFileIOHandle()
+    {
+        delete fileToLoad;
+    };
 };
