@@ -21,6 +21,6 @@ public:
     virtual void Remove(int thisisdifferent);
     // 0x4 (coz vtable above it)
     char spacer2[0xE0];
-    int mainScene;
+    int sceneItemsCount;
 };
 // Size: 220

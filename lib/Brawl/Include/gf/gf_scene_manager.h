@@ -6,12 +6,14 @@ class grCollision; // forward declaration to resolve circular dependancy
 
 class gfSceneManager
 {
-protected:
-    // 0
-    char _spacer[0x04];
-    // 4
 
 public:
+    // 0
+    char spacer[0x4];
     gfScene *currentScene;
+    char _spacer[0x27C];
+    // 4
+    int unk1;
+    int processStep;
     static gfSceneManager *getInstance();
 };

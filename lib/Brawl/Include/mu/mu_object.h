@@ -23,4 +23,5 @@ public:
     void changeVisAnimNIf(char *animName);
     void changeTexPatAnimNIf(char *animName);
     void setFrameVisible(float frame);
+    void setFrameMatCol(float frame);
 };

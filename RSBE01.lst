@@ -131,6 +131,7 @@
 800b50cc:changeClrAnimN__8MuObjectFPc
 800b51f4:changeClrAnimNIf__8MuObjectFPc
 800b784c:setFrameVisible__8MuObjectFf
+800b7a18:setFrameMatCol__8MuObjectFf
 
 80027c40:__ct__16gfModelAnimationFd
 80027fa4:__ct1__16gfModelAnimationFd
