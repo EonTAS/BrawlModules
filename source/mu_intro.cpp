@@ -14,6 +14,7 @@
 #include <gf/gf_game_application.h>
 #include <snd_system.h>
 #include <flush_cache.h>
+#include <gm/gm_global.h>
 
 const scriptEntry typeVoiceLines[] = {{-1, 0}, {-1, 0}, {0x203F, 0x27}, {0x2040, 0x31}};
 static muObjectFlags mapFileList[] = {
@@ -224,6 +225,7 @@ void muIntroTask::getStageSetting()
    }
 }
 
+extern gmGameGlobal *g_GameGlobal;
 void muIntroTask::makeSoundScript()
 {
    if (this->mode == breakTheTargets)
@@ -276,13 +278,13 @@ void muIntroTask::makeSoundScript()
       {
          int language = 0; // getLanguage
          int charLineLength;
-         if (language == 0)
+         if (g_GameGlobal->getLanguage() == 0)
          {
-            charLineLength = charSfxId; // getEnglishVoiceLength(this->enemies[i].charId);
+            charLineLength = muMenu::exchangeSelCharVoice2SelCharVoiceLengthE(charSfxId);
          }
          else
          {
-            charLineLength = charSfxId + 1; // getJapaneseVoiceLength(this->enemies[i].charId);
+            charLineLength = muMenu::exchangeSelCharVoice2SelCharVoiceLengthJ(charSfxId);
          }
          this->addScriptEntry(charSfxId, charLineLength);
       }
@@ -522,7 +524,7 @@ void muIntroTask::getEnemyResFileName(char *str1, char *str2, char *str3, int fi
    {
       displayType = 2;
    }
-   int fighterFileId = fighterId + 1; // convertFighterID(fighterId);
+   int fighterFileId = muMenu::exchangeGmCharacterKind2Something(fighterId) + 1;
    sprintf(str1, "/menu/intro/enter/%s%04d.brres", "chr", fighterFileId);
    sprintf(str2, "ItrSimple%s%04d_TopN__%d", "Chr", fighterFileId, displayType);
    sprintf(str3, "ItrSimple%s%04d_TopN__0", "Chr", fighterFileId);
@@ -569,17 +571,32 @@ muIntroTask::muIntroTask() : gfTask("Intro", 8, 0xf, 8, 1)
    {
       this->files[i] = muFileIOHandle();
    }
+   for (int i = 0; i < 8; i++)
+   {
+      this->resFiles[i] = 0;
+   }
    this->scriptCurrent = 0;
    this->scriptCount = 0;
    this->commonFilePre = 0;
    this->voiceLineCurrentTime = 0;
 }
+
+// 0x811A8CE0
 muIntroTask::~muIntroTask()
 {
-   // for (int i = 0; i < 8; i++)
-   //{
-   //    delete &this->files[i];
-   // }
+   delete this->scnMdl;
+   for (int i = 0; i < 0x12; i++)
+   {
+      delete this->muObjects[i];
+   }
+   for (int i = 0; i < 8; i++)
+   {
+      delete this->resFiles[i];
+   }
+   for (int i = 0; i < 8; i++)
+   {
+      this->files[i].cancelRequest();
+   }
 }
 bool muIntroTask::isLoadFinished()
 {

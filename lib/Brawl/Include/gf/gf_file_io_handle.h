@@ -14,6 +14,7 @@ public:
     int getReturnStatus();
     void *getBuffer();
     void release();
+    void cancelRequest();
     gfFileIOHandle()
     {
         fileToLoad = 0;

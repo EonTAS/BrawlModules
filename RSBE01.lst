@@ -2,6 +2,7 @@
 805a0148: g_ecMgr
 8059FFAC: g_gfGameApplication
 805A01D0: g_sndSystem
+805A00E0: g_GameGlobal
 
 // System
 8000c8ac:__nw__FUl
@@ -94,6 +95,9 @@
 80021fa0:getPool__14gfFileIOHandleFv
 80021fac:release__14gfFileIOHandleFv
 
+// gameGlobal
+8004D9DC:getLanguage__12gmGameGlobalFv
+
 // allMineUnsorted
 80021498:readRequest__14gfFileIOHandleFPc8HeapTypeii
 803f89fc:sprintf__FPcPCce
@@ -112,6 +116,10 @@
 800afb88:isLoadFinishMenuSound__6muMenuFv
 8018ea08:Init__Q34nw4r3g3d7ResFileFPv
 800af85c:exchangeSelchkind2SelCharVoice__6muMenuFi
+800af8a0:exchangeSelCharVoice2SelCharVoiceLengthE__6muMenuFi
+800AF8B8:exchangeSelCharVoice2SelCharVoiceLengthJ__6muMenuFi
+800af600:exchangeGmCharacterKind2Something__6muMenuFi
+
 801b4af4:Construct__6ScnMdlFPviiPv
 801b4d94:Pushback__6ScnMdlFPvPvPc
 80024430:getMEMAllocator__13gfHeapManagerF8HeapType

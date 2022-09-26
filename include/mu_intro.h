@@ -45,12 +45,11 @@ class muIntroTask : public gfTask
 {
 protected:
     // 0x40
-    nw4r::g3d::ResFile *resFiles[3];
-    char paddingagain[0x14];
+    nw4r::g3d::ResFile *resFiles[8];
     // 0x60
     MuObject *muObjects[0x12];
 
-    ScnMdl *scnMdl;
+    ScnMdl *scnMdl; // G3dObjFv
     // 0xAC
     int progression;
     modeType mode;
