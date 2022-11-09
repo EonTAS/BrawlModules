@@ -18,7 +18,7 @@ public:
     gfFileIOHandle()
     {
         fileToLoad = 0;
-    }
+    };
     ~gfFileIOHandle()
     {
         delete fileToLoad;

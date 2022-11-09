@@ -1,28 +1,31 @@
 #pragma once
 
-struct Vec3f {
+struct Vec3f
+{
     float f1;
     float f2;
     float f3;
 };
 
-class soNullableInterface {
-
+class soNullableInterface
+{
 };
 
-template<class T>
-class soArrayFixed : public soNullableInterface {
+template <class T>
+class soArrayFixed : public soNullableInterface
+{
     // TODO: Verify params
     virtual void isNull();
-    virtual void at();
+    virtual T *at(int index);
     virtual void at_overload();
-    virtual void size();
+    virtual int size();
     virtual void isEmpty();
     virtual ~soArrayFixed();
 };
 
-template<class T>
-class soArrayContractible : public soArrayFixed<T> {
+template <class T>
+class soArrayContractible : public soArrayFixed<T>
+{
     // TODO: Verify params
     virtual ~soArrayContractible();
     virtual void shift();
@@ -30,8 +33,9 @@ class soArrayContractible : public soArrayFixed<T> {
     virtual void clear();
 };
 
-template<class T>
-class soArray : public soArrayContractible<T> {
+template <class T>
+class soArray : public soArrayContractible<T>
+{
     virtual ~soArray();
 
     // TODO: Verify params
@@ -44,7 +48,8 @@ class soArray : public soArrayContractible<T> {
     virtual void set();
 };
 
-class soArrayVectorCalcInterface {
+class soArrayVectorCalcInterface
+{
     // TODO: Verify params
     virtual void substitution();
     virtual void onFull();
@@ -54,12 +59,13 @@ class soArrayVectorCalcInterface {
     virtual ~soArrayVectorCalcInterface();
 };
 
-template<class T>
-class soArrayVectorAbstract : public soArray<T>, public soArrayVectorCalcInterface {
-
+template <class T>
+class soArrayVectorAbstract : public soArray<T>, public soArrayVectorCalcInterface
+{
+public:
     // TODO: Verify params
     virtual void isNull();
-    virtual void at();
+    virtual T *at(int index);
     virtual void at_overload();
     virtual ~soArrayVectorAbstract();
     virtual void shift();
@@ -81,14 +87,16 @@ class soArrayVectorAbstract : public soArray<T>, public soArrayVectorCalcInterfa
     virtual void setSize();
 };
 
-template<class T, int C>
-class soArrayVector : public soArrayVectorAbstract<T> {
-    int* unk1;
+template <class T, int C>
+class soArrayVector : public soArrayVectorAbstract<T>
+{
+public:
+    int *unk1;
 
     T array[C];
 
     // TODO: Verify params
-    virtual void size();
+    virtual int size();
     virtual ~soArrayVector();
     virtual void capacity();
     virtual void isFull();

@@ -9,6 +9,11 @@ class muMenuController
 {
     char unk[0xA8];
 };
+struct _fighter
+{
+    int charId;
+    int displayId;
+};
 class scIntro : public gfScene, public muMenu
 {
     // 90ff6b60
@@ -23,9 +28,9 @@ public:
     int progression;
     modeType mode;
     int enemyCount;
-    fighter enemies[3];
+    _fighter enemies[3];
     int allyCount;
-    fighter allies[2];
+    _fighter allies[2];
     // offset 0x398
     // 0x394
     int activeController;

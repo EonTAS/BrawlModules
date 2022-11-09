@@ -1,0 +1,30 @@
+notes:
+
+get fighters involved in match:
+    loop through each slot, get fighter ID, get fighter costume ID, get fighter team
+        from fighter ID and costume ID i can access the res files for the costume + textures + from fighter ID i can access motionetc
+        with fighter team i can decide which side they get assigned to.
+    preferably do this through solely ftSlot as base pointer?
+
+assign this to mode 3, add special cases so this doesnt run if not that.
+
+probably actually best to loop over each stLoaderPlayer since that has the whole concept of the fighter in it?
+
+stLoaderPlayer description 
+r3 
+#80946688
+0x15(0x40(r3)) = isTeams?
+0x13(0x40(r3)) = isTeams?
+0x48(r3) = fighterSlot
+0xA3(0x5C*fighterSlot + 0x40(r3)) = team
+
+fighter team set at 806dcf8c
+
+
+setToGlobal/[muSelCharTask] 
+writes team at line 0x80684A7C
+is enabled handled at lien 0x806847c8
+
+handle all this in the code that reads data, use global muSelCharTask object to get each fighter (but maybe not coz this isnt where the data would be for classic modes etc)
+
+stLoaderPlayer seems to be what i actually need to use to handle correct the full extent of "is this fighter loaded etc"

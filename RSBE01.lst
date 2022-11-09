@@ -3,6 +3,9 @@
 8059FFAC: g_gfGameApplication
 805A01D0: g_sndSystem
 805A00E0: g_GameGlobal
+80B87C28: g_ftManager
+80B87C50: g_ftSlotManager
+80B8A6D0: g_stLoaderPlayerArray
 
 // System
 8000c8ac:__nw__FUl
@@ -98,6 +101,11 @@
 // gameGlobal
 8004D9DC:getLanguage__12gmGameGlobalFv
 
+8082b15c:isLoaded__6ftSlotFv
+8082b22c:isReady__6ftSlotFv
+800465f0:getResFileFromId__16utArchiveManagerFiiiii
+8082AA80:getResId__6ftSlotFiii
+8077a894:getManager__11soArchiveDbFi
 // allMineUnsorted
 80021498:readRequest__14gfFileIOHandleFPc8HeapTypeii
 803f89fc:sprintf__FPcPCce
@@ -222,7 +230,7 @@
 800742b0:playSE__9sndSystemFiiiii
 
 800b2394:create__8MuObjectFPPQ34nw4r3g3d7ResFilePcci8HeapType
-800b2404:create__8MuObjectFPPQ34nw4r3g3d7ResFileici8HeapType
+800b2404:create__8MuObjectFPPQ34nw4r3g3d7ResFileiPPQ34nw4r3g3d7ResFilePPQ34nw4r3g3d7ResFile8HeapType
 
 // runtime 
 803f12ec:_savegpr_14

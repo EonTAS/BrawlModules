@@ -11,11 +11,6 @@ struct scriptEntry
     int id;
     int length;
 };
-struct fighter
-{
-    int charId;
-    int displayId;
-};
 
 struct muObjectFlags
 {
@@ -28,7 +23,8 @@ enum modeType
 {
     standard = 0x0,
     teams = 0x1,
-    breakTheTargets = 0x2
+    breakTheTargets = 0x2,
+    vsFightIntro = 0x3
 };
 enum displayType
 {
@@ -38,37 +34,68 @@ enum displayType
     metalFighter = 0x3
 };
 
-const int totalEnemies = 3;
-const int totalAllies = 2;
+struct fighter
+{
+    int charId;
+    int displayId;
+};
+const int totalPossibleEnemies = 4;
+const int totalPossibleAllies = 2;
 
 class muIntroTask : public gfTask
 {
 protected:
     // 0x40
-    nw4r::g3d::ResFile *resFiles[8];
+    union
+    {
+        struct
+        {
+            nw4r::g3d::ResFile *mainScene;
+            nw4r::g3d::ResFile *charCommon;
+            nw4r::g3d::ResFile *enemies[3];
+            nw4r::g3d::ResFile *miniGame;
+            nw4r::g3d::ResFile *allies[2];
+        };
+        nw4r::g3d::ResFile *asArray[8];
+    } resFiles;
     // 0x60
-    MuObject *muObjects[0x12];
+    union
+    {
+        struct
+        {
+            MuObject *mainScene;
+            MuObject *stageProgess;
+            MuObject *misc[2];
+            MuObject *enemies[11];
+            MuObject *allyPointer;
+            MuObject *allies[2];
+        };
+        MuObject *asArray[18];
+    } muObjects;
 
     ScnMdl *scnMdl; // G3dObjFv
     // 0xAC
     int progression;
     modeType mode;
     int enemyCount;
-    fighter enemies[totalEnemies];
+    fighter enemies[totalPossibleEnemies];
     int allyCount;
-    fighter allies[totalAllies];
+    fighter allies[totalPossibleAllies];
     // 0xE4
     int commonFilePre;
-    muFileIOHandle files[8];
-    //// 0xE8
-    // gfFileIOHandle commonFile;
-    //// 0xEC
-    // char _spacer2[0x10];
-    //// 0xFC
-    // gfFileIOHandle miniFile;
-    //// 0x100
-    // char _spacer3[0x8];
 
+    union
+    {
+        struct
+        {
+            muFileIOHandle mainScene;
+            muFileIOHandle charCommon;
+            muFileIOHandle enemies[3];
+            muFileIOHandle miniGame;
+            muFileIOHandle allies[2];
+        };
+        muFileIOHandle asArray[8];
+    } files;
     //  0x108
     char soundScriptStarted;
     char _soundScriptStarted[0x3];
@@ -90,6 +117,7 @@ public:
     void makeSoundScript();
     void createCharModel();
     void loadCharModel();
+    void load3DCharModels();
     void createMuObjects(muObjectFlags data[], int num, nw4r::g3d::ResFile **resFile);
     void setProgressionMeter(int progression);
     inline void addScriptEntry(int ID, int length);

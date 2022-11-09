@@ -12,7 +12,7 @@ public:
     char unk2[0x44];
 
     static MuObject *create(nw4r::g3d::ResFile **output, char *node, char flag, int otherflag, HeapType type);
-    static MuObject *create(nw4r::g3d::ResFile **output, int node, char flag, int otherflag, HeapType type);
+    static MuObject *create(nw4r::g3d::ResFile **output, int drawPrio, nw4r::g3d::ResFile **extraFile, nw4r::g3d::ResFile **extraFile2, HeapType type);
     void changeAnimN(char *animName);
     void changeNodeAnimN(char *animName);
     void changeClrAnimN(char *animName);
