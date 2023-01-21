@@ -4,6 +4,7 @@
 #include <gf/gf_scene.h>
 #include <mu/mu_menu.h>
 #include <mu/mu_menuroot.h>
+#include <gf/gf_module.h>
 
 class muMenuController
 {
@@ -19,7 +20,7 @@ public:
     // 0x8
     muMenuController menuControllers[5];
     // 0x350
-    char _spacer[0x14];
+    char _spacer[0xC];
     int progression;
     modeType mode;
     int enemyCount;

@@ -3,8 +3,8 @@
 #include <memory.h>
 #include "mu_intro.h"
 #include "sc_intro.h"
-#include <OSError.h>
-#include <gf/gf_scene_manager.h>
+#include <OS/OSError.h>
+#include <gf/gf_scene.h>
 #include "printf.h"
 #include <mu/mu_menu.h>
 #include <gf/gf_model.h>
@@ -13,7 +13,7 @@
 #include <nw4r/g3d/g3d_scnmdl.h>
 #include <gf/gf_game_application.h>
 #include <snd_system.h>
-#include <flush_cache.h>
+#include <TRK/flushcache.h>
 #include <gm/gm_global.h>
 
 const scriptEntry typeVoiceLines[] = {{-1, 0}, {-1, 0}, {0x203F, 0x27}, {0x2040, 0x31}};
@@ -28,9 +28,9 @@ static muObjectFlags panelList[] = {
 };
 muIntroTask *muIntroTask::create()
 {
-   muIntroTask *intro = new (MenuInstance) muIntroTask();
+   muIntroTask *intro = new (Heaps::MenuInstance) muIntroTask();
    intro->getStageSetting();
-   intro->files[0].readRequest("/menu/intro/enter/cmn.brres", MenuResource, 0, 0);
+   intro->files[0].readRequest("/menu/intro/enter/cmn.brres", Heaps::MenuResource, 0, 0);
    if (intro->mode != breakTheTargets)
    {
       intro->createCharModel();
@@ -39,7 +39,7 @@ muIntroTask *muIntroTask::create()
    {
       char filename[32];
       sprintf(filename, "/menu/intro/enter/mini%d.brres", 1);
-      intro->files[5].readRequest(filename, MenuResource, 0, 0);
+      intro->files[5].readRequest(filename, Heaps::MenuResource, 0, 0);
    }
    muMenu::loadMenuSound();
    intro->commonFilePre = 0;
@@ -56,7 +56,7 @@ muIntroTask *muIntroTask::create()
               : [checkLoad] "r"(&checkLoad));
       instruction += functionAddress - (int)targetAddress; // add offset to instruction
       *targetAddress = instruction;
-      TRK_flush_cache((int)(targetAddress - 4), (int)(targetAddress + 4));
+      TRK_flush_cache((void *)(targetAddress - 4), (int)(targetAddress + 4));
    }
 
    return intro;
@@ -114,7 +114,7 @@ void muIntroTask::processDefault()
                nw4r::g3d::ResFile::Init(&buffer);
             }
             this->resFiles[7] = (nw4r::g3d::ResFile *)buffer;
-            this->muObjects[4] = MuObject::create(&this->resFiles[7], 18, (char)0, 0, MenuInstance);
+            this->muObjects[4] = MuObject::create(&this->resFiles[7], 18, (char)0, 0, Heaps::MenuInstance);
          }
          g_gfGameApplication->keepFB.endKeepScreen();
          char str[32];
@@ -125,7 +125,7 @@ void muIntroTask::processDefault()
          currentMu->changeTexPatAnimNIf(str);
          currentMu->changeClrAnimNIf(str);
          currentMu->gfModelAnimation->setUpdateRate(1.0);
-         scIntro *_intro = (scIntro *)gfSceneManager::getInstance()->currentScene;
+         scIntro *_intro = (scIntro *)gfSceneManager::getInstance()->m_currentScene;
          (*_intro->menuRoot)->scene->Insert((*_intro->menuRoot)->scene->sceneItemsCount, currentMu->scnObj);
          if (this->mode != breakTheTargets)
          {
@@ -133,9 +133,9 @@ void muIntroTask::processDefault()
          }
          else
          {
-            this->muObjects[4]->gfModelAnimation->anmObjChrRes->SetUpdateRate(1.0);
-            this->muObjects[4]->gfModelAnimation->anmObjMatClrRes->SetUpdateFrame(1.0);
-            scIntro *_intro = (scIntro *)gfSceneManager::getInstance()->currentScene;
+            this->muObjects[4]->gfModelAnimation->m_anmObjChrRes->SetUpdateRate(1.0);
+            this->muObjects[4]->gfModelAnimation->m_anmObjMatClrRes->SetUpdateRate(1.0);
+            scIntro *_intro = (scIntro *)gfSceneManager::getInstance()->m_currentScene;
             ScnGroup *scene = (*_intro->menuRoot)->scene;
             scene->Insert(scene->sceneItemsCount, this->muObjects[4]->scnObj);
          }
@@ -185,7 +185,7 @@ void muIntroTask::createMuObjects(muObjectFlags data[], int num, nw4r::g3d::ResF
       }
       for (int j = 0; j < maxNodes; j++)
       {
-         MuObject *result = MuObject::create(resFile, currData.node, currData.flags[2], 0, MenuInstance);
+         MuObject *result = MuObject::create(resFile, currData.node, currData.flags[2], 0, Heaps::MenuInstance);
          this->muObjects[currData.flags[0] + j] = result;
 
          char str1[32];
@@ -203,7 +203,7 @@ void muIntroTask::createMuObjects(muObjectFlags data[], int num, nw4r::g3d::ResF
 void muIntroTask::getStageSetting()
 {
    gfSceneManager *manager = gfSceneManager::getInstance();
-   scIntro *_intro = (scIntro *)manager->currentScene;
+   scIntro *_intro = (scIntro *)manager->m_currentScene;
 
    this->progression = _intro->progression;
    this->mode = _intro->mode;
@@ -225,7 +225,7 @@ void muIntroTask::getStageSetting()
    }
 }
 
-extern gmGameGlobal *g_GameGlobal;
+// extern gmGameGlobal *g_GameGlobal;
 void muIntroTask::makeSoundScript()
 {
    if (this->mode == breakTheTargets)
@@ -304,7 +304,7 @@ void muIntroTask::loadCharModel()
    }
    this->resFiles[1] = (nw4r::g3d::ResFile *)buffer;
    this->createMuObjects(panelList, 4, &this->resFiles[1]);
-   this->scnMdl = ScnMdl::Construct(gfHeapManager::getMEMAllocator(MenuInstance), 0, 0xD, this->muObjects[2]->scnObj);
+   this->scnMdl = nw4r::g3d::ScnMdl::Construct(gfHeapManager::getMEMAllocator(Heaps::MenuInstance), 0, 0xD, this->muObjects[2]->scnObj);
 
    if (this->mode == teams)
    {
@@ -326,9 +326,9 @@ void muIntroTask::loadCharModel()
       this->resFiles[2] = (nw4r::g3d::ResFile *)buffer;
       for (int i = 0; i < 11; i++)
       {
-         MuObject *newMu = MuObject::create(&this->resFiles[2], 0x1C - i, 0, 0, MenuInstance);
+         MuObject *newMu = MuObject::create(&this->resFiles[2], 0x1C - i, 0, 0, Heaps::MenuInstance);
          newMu->changeNodeAnimN(str2);
-         newMu->gfModelAnimation->anmObjChrRes->SetUpdateRate(1.0);
+         newMu->gfModelAnimation->m_anmObjChrRes->SetUpdateRate(1.0);
          newMu->changeClrAnimN(str2);
          float style;
          if (i == 0)
@@ -339,10 +339,10 @@ void muIntroTask::loadCharModel()
          {
             style = 0.0;
          }
-         newMu->gfModelAnimation->anmObjMatClrRes->SetUpdateFrame(style);
+         newMu->gfModelAnimation->m_anmObjMatClrRes->SetUpdateRate(style);
          newMu->changeVisAnimN(str3);
          newMu->setFrameVisible(3.0);
-         newMu->gfModelAnimation->anmObjVisRes->SetUpdateFrame(0.0);
+         newMu->gfModelAnimation->m_anmObjVisRes->SetUpdateRate(0.0);
          this->muObjects[i + 4] = newMu;
       }
    }
@@ -366,12 +366,12 @@ void muIntroTask::loadCharModel()
          char str2[32];
          char str3[32];
          this->getEnemyResFileName(str1, str2, str3, this->enemies[i].charId, this->enemies[i].displayId);
-         MuObject *newMu = MuObject::create(&this->resFiles[2 + i], 0x1C - i, 0, 0, MenuInstance);
+         MuObject *newMu = MuObject::create(&this->resFiles[2 + i], 0x1C - i, 0, 0, Heaps::MenuInstance);
 
          newMu->changeNodeAnimN(str2);
-         newMu->gfModelAnimation->anmObjChrRes->SetUpdateRate(1.0);
+         newMu->gfModelAnimation->m_anmObjChrRes->SetUpdateRate(1.0);
          newMu->changeClrAnimN(str2);
-         newMu->gfModelAnimation->anmObjMatClrRes->SetUpdateFrame(1.0);
+         newMu->gfModelAnimation->m_anmObjMatClrRes->SetUpdateRate(1.0);
          newMu->changeVisAnimN(str3);
          int enemyCount = this->enemyCount;
          float targetFrame;
@@ -395,7 +395,7 @@ void muIntroTask::loadCharModel()
             targetFrame = 4.0;
          }
          newMu->setFrameVisible(targetFrame);
-         newMu->gfModelAnimation->anmObjVisRes->SetUpdateFrame(0.0);
+         newMu->gfModelAnimation->m_anmObjVisRes->SetUpdateRate(0.0);
          this->muObjects[i + 4] = newMu;
       }
    }
@@ -420,15 +420,15 @@ void muIntroTask::loadCharModel()
          char str2[32];
          char str3[32];
          this->getEnemyResFileName(str1, str2, str3, this->allies[i].charId, this->allies[i].displayId);
-         MuObject *newMu = MuObject::create(&this->resFiles[6 + i], 0x1E - i, 0, 0, MenuInstance);
+         MuObject *newMu = MuObject::create(&this->resFiles[6 + i], 0x1E - i, 0, 0, Heaps::MenuInstance);
 
          newMu->changeNodeAnimN(str2);
-         newMu->gfModelAnimation->anmObjChrRes->SetUpdateRate(1.0);
+         newMu->gfModelAnimation->m_anmObjChrRes->SetUpdateRate(1.0);
          newMu->changeClrAnimN(str2);
-         newMu->gfModelAnimation->anmObjMatClrRes->SetUpdateFrame(1.0);
+         newMu->gfModelAnimation->m_anmObjMatClrRes->SetUpdateRate(1.0);
          newMu->changeVisAnimN(str3);
          newMu->setFrameVisible(5.0);
-         newMu->gfModelAnimation->anmObjVisRes->SetUpdateFrame(0.0);
+         newMu->gfModelAnimation->m_anmObjVisRes->SetUpdateRate(0.0);
 
          this->muObjects[i + 16] = newMu;
       }
@@ -466,13 +466,13 @@ void muIntroTask::loadCharModel()
    {
       char targetString[32];
       sprintf(targetString, "pos%02d", startingNode + i);
-      ScnMdl::Pushback(this->scnMdl, this->muObjects[4 + i]->scnObj, targetString);
+      nw4r::g3d::ScnMdl::Pushback(this->scnMdl, this->muObjects[4 + i]->scnObj, targetString);
    }
    for (int i = 0; i < this->allyCount; i++)
    {
       char targetString[32];
       sprintf(targetString, "pos%02d", 0x1E + i);
-      ScnMdl::Pushback(this->scnMdl, this->muObjects[16 + i]->scnObj, targetString);
+      nw4r::g3d::ScnMdl::Pushback(this->scnMdl, this->muObjects[16 + i]->scnObj, targetString);
    }
 }
 
@@ -482,7 +482,7 @@ void muIntroTask::createCharModel()
    {
       return;
    }
-   this->files[1].readRequest("/menu/intro/enter/chrcmn.brres", MenuResource, 0, 0);
+   this->files[1].readRequest("/menu/intro/enter/chrcmn.brres", Heaps::MenuResource, 0, 0);
    if (this->mode == teams)
    {
       char str1[32];
@@ -490,7 +490,7 @@ void muIntroTask::createCharModel()
       char str3[32];
       fighter enemy = this->enemies[0];
       this->getEnemyResFileName(str1, str2, str3, enemy.charId, standardFighter);
-      this->files[2].readRequest(str1, MenuInstance, 0, 0);
+      this->files[2].readRequest(str1, Heaps::MenuInstance, 0, 0);
    }
    else
    {
@@ -500,7 +500,7 @@ void muIntroTask::createCharModel()
          char str2[32];
          char str3[32];
          this->getEnemyResFileName(str1, str2, str3, this->enemies[i].charId, this->enemies[i].displayId);
-         this->files[2 + i].readRequest(str1, MenuInstance, 0, 0);
+         this->files[2 + i].readRequest(str1, Heaps::MenuInstance, 0, 0);
       }
    }
    for (int i = 0; i < this->allyCount; i++)
@@ -509,7 +509,7 @@ void muIntroTask::createCharModel()
       char str2[32];
       char str3[32];
       this->getEnemyResFileName(str1, str2, str3, this->allies[i].charId, this->allies[i].displayId);
-      this->files[6 + i].readRequest(str1, MenuInstance, 0, 0);
+      this->files[6 + i].readRequest(str1, Heaps::MenuInstance, 0, 0);
    }
 }
 
@@ -534,22 +534,22 @@ void muIntroTask::setProgressionMeter(int progression)
 {
    this->muObjects[1]->setFrameMatCol((float)progression);
 
-   scIntro *_intro = (scIntro *)gfSceneManager::getInstance()->currentScene;
+   scIntro *_intro = (scIntro *)gfSceneManager::getInstance()->m_currentScene;
    ScnGroup *scene = (*_intro->menuRoot)->scene;
    scene->Insert(scene->sceneItemsCount, this->muObjects[1]->scnObj);
    scene->Insert(scene->sceneItemsCount, this->scnMdl);
 
-   this->muObjects[2]->gfModelAnimation->anmObjChrRes->SetUpdateRate(1.0);
-   this->muObjects[2]->gfModelAnimation->anmObjMatClrRes->SetUpdateFrame(1.0);
+   this->muObjects[2]->gfModelAnimation->m_anmObjChrRes->SetUpdateRate(1.0);
+   this->muObjects[2]->gfModelAnimation->m_anmObjMatClrRes->SetUpdateRate(1.0);
 
    if (this->allyCount != 0)
    {
       scene->Insert(scene->sceneItemsCount, this->muObjects[15]->scnObj);
-      this->muObjects[15]->gfModelAnimation->anmObjChrRes->SetUpdateRate(1.0);
+      this->muObjects[15]->gfModelAnimation->m_anmObjChrRes->SetUpdateRate(1.0);
    }
 
-   this->muObjects[3]->gfModelAnimation->anmObjChrRes->SetUpdateRate(1.0);
-   this->muObjects[3]->gfModelAnimation->anmObjMatClrRes->SetUpdateFrame(1.0);
+   this->muObjects[3]->gfModelAnimation->m_anmObjChrRes->SetUpdateRate(1.0);
+   this->muObjects[3]->gfModelAnimation->m_anmObjMatClrRes->SetUpdateRate(1.0);
    scene->Insert(scene->sceneItemsCount, this->muObjects[3]->scnObj);
 }
 

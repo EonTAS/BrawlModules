@@ -1,10 +1,10 @@
 #pragma once
 
 #include <types.h>
-#include <st/st_melee.h>
 #include "mu_file_io_handle.h"
 #include <nw4r/g3d/g3d_resfile.h>
 #include <mu/mu_object.h>
+#include <gf/gf_task.h>
 
 struct scriptEntry
 {
@@ -49,7 +49,7 @@ protected:
     // 0x60
     MuObject *muObjects[0x12];
 
-    ScnMdl *scnMdl; // G3dObjFv
+    nw4r::g3d::ScnMdl *scnMdl; // G3dObjFv
     // 0xAC
     int progression;
     modeType mode;

@@ -72,7 +72,7 @@ export HFILES := $(addsuffix .h,$(subst .,_,$(BINFILES)))
 
 # For REL linking
 export LDFILES		:= $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.ld)))
-export MAPFILE		:= $(CURDIR)/RSBE01.lst
+export MAPFILE		:= $(CURDIR)/lib/RSBE01.lst
 export LCF			:= $(TOPDIR)/rel.lcf
 
 #---------------------------------------------------------------------------------
@@ -81,9 +81,11 @@ export LCF			:= $(TOPDIR)/rel.lcf
 export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 			-I$(CURDIR)/$(BUILD) -I- \
 			-I$(CURDIR)/lib/PowerPC_EABI_Support/Runtime/Inc \
-			-I$(CURDIR)/lib/Brawl/Include \
+			-I$(CURDIR)/lib/Brawl/include \
 			-I$(CURDIR)/lib/nw4r/include \
-			-I$(CURDIR)/lib/rvl/Include
+			-I$(CURDIR)/lib/rvl/include \
+			-I$(CURDIR)/lib/std/include \
+			-I$(CURDIR)/lib/utils/include \
 
 #---------------------------------------------------------------------------------
 # build a list of library paths
