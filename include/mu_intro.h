@@ -18,10 +18,19 @@ struct fighter
     int displayId;
 };
 
+typedef enum
+{
+    mainScene,
+    stageProgess,
+    misc1,
+    misc2,
+    allyPointer,
+} muObjectID;
 struct muObjectFlags
 {
     char *node;
-    char flags[4];
+    muObjectID id;
+    char flag;
 };
 
 const int maxMode = 2;
@@ -46,37 +55,25 @@ const int totalAllies = 2;
 class muIntroTask : public gfTask
 {
 protected:
-    // 0x40
+    struct
+    {
+        nw4r::g3d::ResFile *mainScene;
+        nw4r::g3d::ResFile *charCommon;
+        nw4r::g3d::ResFile *enemies[3];
+        nw4r::g3d::ResFile *miniGame;
+        nw4r::g3d::ResFile *allies[2];
+    } resFiles;
 
-    // union
-    // {
-    //     struct
-    //     {
-    //         nw4r::g3d::ResFile *mainScene;
-    //         nw4r::g3d::ResFile *charCommon;
-    //         nw4r::g3d::ResFile *enemies[3];
-    //         nw4r::g3d::ResFile *miniGame;
-    //         nw4r::g3d::ResFile *allies[2];
-    //     };
-    //     nw4r::g3d::ResFile *asArray[8];
-    // } resFiles;
-    nw4r::g3d::ResFile *resFiles[8];
-
-    // 0x60
-    // union
-    // {
-    //     struct
-    //     {
-    //         MuObject *mainScene;
-    //         MuObject *stageProgess;
-    //         MuObject *misc[2];
-    //         MuObject *enemies[11];
-    //         MuObject *allyPointer;
-    //         MuObject *allies[2];
-    //     };
-    //     MuObject *asArray[18];
-    // } muObjects;
-    MuObject *muObjects[18];
+    struct
+    {
+        MuObject *mainScene;
+        MuObject *stageProgess;
+        MuObject *misc1;
+        MuObject *misc2;
+        MuObject *enemies[11];
+        MuObject *allyPointer;
+        MuObject *allies[2];
+    } muObjects;
 
     nw4r::g3d::ScnMdl *scnMdl; // G3dObjFv
     // 0xAC
@@ -88,21 +85,14 @@ protected:
     fighter allies[totalAllies];
     // 0xE4
     int commonFilePre;
-
-    // 0xE8
-    //  union
-    //  {
-    //      struct
-    //      {
-    //          muFileIOHandle mainScene;
-    //          muFileIOHandle charCommon;
-    //          muFileIOHandle enemies[3];
-    //          muFileIOHandle miniGame;
-    //          muFileIOHandle allies[2];
-    //      };
-    //      muFileIOHandle asArray[8];
-    //  } files;
-    muFileIOHandle files[8];
+    struct
+    {
+        muFileIOHandle mainScene;
+        muFileIOHandle charCommon;
+        muFileIOHandle enemies[3];
+        muFileIOHandle miniGame;
+        muFileIOHandle allies[2];
+    } files;
 
     //  0x108
     char soundScriptStarted;
@@ -131,6 +121,7 @@ public:
     bool addScriptFighterEntry(int fighterID);
     inline void addScriptEntry(SndID ID, int length);
     bool isLoadFinished();
+    void init();
     void initVersusData();
     virtual void processDefault();
     virtual ~muIntroTask();
