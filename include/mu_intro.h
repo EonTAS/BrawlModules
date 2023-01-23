@@ -5,10 +5,11 @@
 #include <nw4r/g3d/g3d_resfile.h>
 #include <mu/mu_object.h>
 #include <gf/gf_task.h>
+#include <snd/snd_id.h>
 
 struct scriptEntry
 {
-    int id;
+    SndID id;
     int length;
 };
 struct fighter
@@ -28,7 +29,8 @@ enum modeType
 {
     standard = 0x0,
     teams = 0x1,
-    breakTheTargets = 0x2
+    breakTheTargets = 0x2,
+    versus = 0x3
 };
 enum displayType
 {
@@ -45,9 +47,36 @@ class muIntroTask : public gfTask
 {
 protected:
     // 0x40
+
+    // union
+    // {
+    //     struct
+    //     {
+    //         nw4r::g3d::ResFile *mainScene;
+    //         nw4r::g3d::ResFile *charCommon;
+    //         nw4r::g3d::ResFile *enemies[3];
+    //         nw4r::g3d::ResFile *miniGame;
+    //         nw4r::g3d::ResFile *allies[2];
+    //     };
+    //     nw4r::g3d::ResFile *asArray[8];
+    // } resFiles;
     nw4r::g3d::ResFile *resFiles[8];
+
     // 0x60
-    MuObject *muObjects[0x12];
+    // union
+    // {
+    //     struct
+    //     {
+    //         MuObject *mainScene;
+    //         MuObject *stageProgess;
+    //         MuObject *misc[2];
+    //         MuObject *enemies[11];
+    //         MuObject *allyPointer;
+    //         MuObject *allies[2];
+    //     };
+    //     MuObject *asArray[18];
+    // } muObjects;
+    MuObject *muObjects[18];
 
     nw4r::g3d::ScnMdl *scnMdl; // G3dObjFv
     // 0xAC
@@ -59,15 +88,21 @@ protected:
     fighter allies[totalAllies];
     // 0xE4
     int commonFilePre;
+
+    // 0xE8
+    //  union
+    //  {
+    //      struct
+    //      {
+    //          muFileIOHandle mainScene;
+    //          muFileIOHandle charCommon;
+    //          muFileIOHandle enemies[3];
+    //          muFileIOHandle miniGame;
+    //          muFileIOHandle allies[2];
+    //      };
+    //      muFileIOHandle asArray[8];
+    //  } files;
     muFileIOHandle files[8];
-    //// 0xE8
-    // gfFileIOHandle commonFile;
-    //// 0xEC
-    // char _spacer2[0x10];
-    //// 0xFC
-    // gfFileIOHandle miniFile;
-    //// 0x100
-    // char _spacer3[0x8];
 
     //  0x108
     char soundScriptStarted;
@@ -90,10 +125,15 @@ public:
     void makeSoundScript();
     void createCharModel();
     void loadCharModel();
+    MuObject *createMuObject(int fileIndex, int node, HeapType heap);
     void createMuObjects(muObjectFlags data[], int num, nw4r::g3d::ResFile **resFile);
     void setProgressionMeter(int progression);
-    inline void addScriptEntry(int ID, int length);
+    bool addScriptFighterEntry(int fighterID);
+    inline void addScriptEntry(SndID ID, int length);
     bool isLoadFinished();
+    void initVersusData();
     virtual void processDefault();
     virtual ~muIntroTask();
 };
+
+static nw4r::g3d::ResFile *loadFile(muFileIOHandle file);

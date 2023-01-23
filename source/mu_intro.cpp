@@ -12,11 +12,12 @@
 #include <string.h>
 #include <nw4r/g3d/g3d_scnmdl.h>
 #include <gf/gf_game_application.h>
-#include <snd_system.h>
+#include <snd/snd_system.h>
+#include <snd/snd_id.h>
 #include <TRK/flushcache.h>
 #include <gm/gm_global.h>
 
-const scriptEntry typeVoiceLines[] = {{-1, 0}, {-1, 0}, {0x203F, 0x27}, {0x2040, 0x31}};
+const scriptEntry typeVoiceLines[] = {{snd_se_invalid, 0}, {snd_se_invalid, 0}, {snd_se_menu_Narration_Giant, 0x27}, {snd_se_menu_Narration_Metal, 0x31}};
 static muObjectFlags mapFileList[] = {
     {"ItrSimpleMap0000_TopN", {0x0, 0x0, 0x21, 0x0}},
 };
@@ -63,38 +64,13 @@ muIntroTask *muIntroTask::create()
 }
 
 extern gfGameApplication *g_gfGameApplication;
-extern sndSystem *g_sndSystem;
 void muIntroTask::processDefault()
 {
    if (this->soundScriptStarted == 0)
    {
-      bool ready = true;
-      for (int i = 0; i < 8; i++)
+      if (isLoadFinished())
       {
-         if (!this->files[i].isReady())
-         {
-            ready = false;
-            break;
-         }
-      }
-      if (!muMenu::isLoadFinishMenuSound())
-      {
-         ready = false;
-      }
-      if (ready)
-      {
-         void *buffer = 0;
-         if (this->files[0].getReturnStatus() != 0x15)
-         {
-            buffer = this->files[0].getBuffer();
-            this->files[0].release();
-         }
-         if (buffer != 0)
-         {
-            nw4r::g3d::ResFile::Init(&buffer);
-         }
-         this->resFiles[0] = (nw4r::g3d::ResFile *)buffer;
-
+         this->resFiles[0] = loadFile(this->files[0]);
          this->createMuObjects(mapFileList, 1, &this->resFiles[0]);
 
          if (this->mode != breakTheTargets)
@@ -103,17 +79,7 @@ void muIntroTask::processDefault()
          }
          else
          {
-            buffer = 0;
-            if (this->files[5].getReturnStatus() != 0x15)
-            {
-               buffer = this->files[5].getBuffer();
-               this->files[5].release();
-            }
-            if (buffer != 0)
-            {
-               nw4r::g3d::ResFile::Init(&buffer);
-            }
-            this->resFiles[7] = (nw4r::g3d::ResFile *)buffer;
+            this->resFiles[7] = loadFile(this->files[5]);
             this->muObjects[4] = MuObject::create(&this->resFiles[7], 18, (char)0, 0, Heaps::MenuInstance);
          }
          g_gfGameApplication->keepFB.endKeepScreen();
@@ -145,7 +111,7 @@ void muIntroTask::processDefault()
             rumble = -1;
          }
          muMenu::startRumbleController(_intro->activeController, 0x14, rumble);
-         g_sndSystem->playSE(0x2b, -1, 0, 0, -1);
+         g_sndSystem->playSE(snd_se_system_044, -1, 0, 0, -1);
          this->commonFilePre = 0;
          this->soundScriptStarted = 1;
       }
@@ -155,7 +121,7 @@ void muIntroTask::processDefault()
       scriptEntry *currentVoiceLine = &this->script[scriptCurrent];
       if (this->voiceLineCurrentTime == 0)
       {
-         g_sndSystem->playSE(currentVoiceLine->id, -1, 0, 0, -1);
+         g_sndSystem->playSE((SndID)currentVoiceLine->id, -1, 0, 0, -1);
       }
       this->voiceLineCurrentTime++;
       if (this->voiceLineCurrentTime >= currentVoiceLine->length)
@@ -171,7 +137,6 @@ void muIntroTask::processDefault()
       }
    }
 }
-
 void muIntroTask::createMuObjects(muObjectFlags data[], int num, nw4r::g3d::ResFile **resFile)
 {
    for (int i = 0; i < num; i++)
@@ -202,26 +167,34 @@ void muIntroTask::createMuObjects(muObjectFlags data[], int num, nw4r::g3d::ResF
 
 void muIntroTask::getStageSetting()
 {
-   gfSceneManager *manager = gfSceneManager::getInstance();
-   scIntro *_intro = (scIntro *)manager->m_currentScene;
 
-   this->progression = _intro->progression;
-   this->mode = _intro->mode;
-   this->enemyCount = _intro->enemyCount;
-   this->allyCount = _intro->allyCount;
-   for (int i = 0; i < totalEnemies; i++)
+   gfSceneManager *manager = gfSceneManager::getInstance();
+   if (manager->m_currentScene->m_sceneName == "sqSingleSimple")
    {
-      if (i < 3)
+      scIntro *_intro = (scIntro *)manager->m_currentScene;
+
+      this->progression = _intro->progression;
+      this->mode = _intro->mode;
+      this->enemyCount = _intro->enemyCount;
+      this->allyCount = _intro->allyCount;
+      for (int i = 0; i < totalEnemies; i++)
       {
-         this->enemies[i] = _intro->enemies[i];
+         if (i < 3)
+         {
+            this->enemies[i] = _intro->enemies[i];
+         }
+      }
+      for (int i = 0; i < totalAllies; i++)
+      {
+         if (i < 2)
+         {
+            this->allies[i] = _intro->allies[i];
+         }
       }
    }
-   for (int i = 0; i < totalAllies; i++)
+   else
    {
-      if (i < 2)
-      {
-         this->allies[i] = _intro->allies[i];
-      }
+      this->initVersusData();
    }
 }
 
@@ -230,19 +203,22 @@ void muIntroTask::makeSoundScript()
 {
    if (this->mode == breakTheTargets)
    {
-      this->addScriptEntry(0x2035, 0x5A); // "Break the Targets!"
+      this->addScriptEntry(snd_se_menu_Narration_BreakTarget, 0x5A); // "Break the Targets!"
       return;
    }
 
-   this->addScriptEntry(0x203E, 0x3C); // "VERSUS"
    int count;
    if (this->mode == teams)
    {
       count = 1;
-      this->addScriptEntry(0x203C, 0x1E); // "TEAM"
+      this->addScriptEntry(snd_se_menu_Narration_Team, 0x1E); // "TEAM"
    }
    else
    {
+      if (this->mode == standard)
+      {
+         this->addScriptEntry(snd_se_menu_Narration_Versus, 0x3C); // "VERSUS"
+      }
       count = this->enemyCount;
    }
    for (int i = 0; i < count; i++)
@@ -251,11 +227,11 @@ void muIntroTask::makeSoundScript()
       {
          if (i < count - 1) // if not last in list,
          {
-            this->addScriptEntry(-1, 10); // "{comma}"
+            this->addScriptEntry(snd_se_invalid, 10); // "{comma}"
          }
          else
          {
-            this->addScriptEntry(0x203D, 0x2B); // "AND"
+            this->addScriptEntry(snd_se_menu_Narration_And, 0x2B); // "AND"
          }
       }
       int prefixIndex;
@@ -273,36 +249,40 @@ void muIntroTask::makeSoundScript()
       {
          this->addScriptEntry(prefix.id, prefix.length);
       }
-      int charSfxId = muMenu::exchangeSelchkind2SelCharVoice(this->enemies[i].charId);
-      if (charSfxId != -1)
+      this->addScriptFighterEntry(this->enemies[i].charId);
+   }
+   if (this->mode == versus)
+   {
+      count = this->allyCount;
+      for (int i = 0; i < count; i++)
       {
-         int language = 0; // getLanguage
-         int charLineLength;
-         if (g_GameGlobal->getLanguage() == 0)
+         if (i > 0) // if the very first voice line, dont have a seperator
          {
-            charLineLength = muMenu::exchangeSelCharVoice2SelCharVoiceLengthE(charSfxId);
+            if (i < count - 1) // if not last in list,
+            {
+               this->addScriptEntry(snd_se_invalid, 10); // "{comma}"
+            }
+            else
+            {
+               this->addScriptEntry(snd_se_menu_Narration_And, 0x2B); // "AND"
+            }
          }
          else
          {
-            charLineLength = muMenu::exchangeSelCharVoice2SelCharVoiceLengthJ(charSfxId);
+            this->addScriptEntry(snd_se_menu_Narration_Versus, 0x3C); // "VERSUS"
          }
-         this->addScriptEntry(charSfxId, charLineLength);
+         scriptEntry prefix = typeVoiceLines[standardFighter];
+         if (prefix.id != -1)
+         {
+            this->addScriptEntry(prefix.id, prefix.length);
+         }
+         this->addScriptFighterEntry(this->allies[i].charId);
       }
    }
 }
 void muIntroTask::loadCharModel()
 {
-   void *buffer = 0;
-   if (this->files[1].getReturnStatus() != 0x15)
-   {
-      buffer = this->files[1].getBuffer();
-      this->files[1].release();
-   }
-   if (buffer != 0)
-   {
-      nw4r::g3d::ResFile::Init(&buffer);
-   }
-   this->resFiles[1] = (nw4r::g3d::ResFile *)buffer;
+   this->resFiles[1] = loadFile(this->files[1]);
    this->createMuObjects(panelList, 4, &this->resFiles[1]);
    this->scnMdl = nw4r::g3d::ScnMdl::Construct(gfHeapManager::getMEMAllocator(Heaps::MenuInstance), 0, 0xD, this->muObjects[2]->scnObj);
 
@@ -313,17 +293,7 @@ void muIntroTask::loadCharModel()
       char str2[32];
       char str3[32];
       this->getEnemyResFileName(str1, str2, str3, this->enemies[0].charId, standardFighter);
-      buffer = 0;
-      if (this->files[2].getReturnStatus() != 0x15)
-      {
-         buffer = this->files[2].getBuffer();
-         this->files[2].release();
-      }
-      if (buffer != 0)
-      {
-         nw4r::g3d::ResFile::Init(&buffer);
-      }
-      this->resFiles[2] = (nw4r::g3d::ResFile *)buffer;
+      this->resFiles[2] = loadFile(this->files[2]);
       for (int i = 0; i < 11; i++)
       {
          MuObject *newMu = MuObject::create(&this->resFiles[2], 0x1C - i, 0, 0, Heaps::MenuInstance);
@@ -346,21 +316,11 @@ void muIntroTask::loadCharModel()
          this->muObjects[i + 4] = newMu;
       }
    }
-   else if (this->mode == standard)
+   else if (this->mode == standard || this->mode == versus)
    {
       for (int i = 0; i < this->enemyCount; i++)
       {
-         buffer = 0;
-         if (this->files[2 + i].getReturnStatus() != 0x15)
-         {
-            buffer = this->files[2 + i].getBuffer();
-            this->files[2 + i].release();
-         }
-         if (buffer != 0)
-         {
-            nw4r::g3d::ResFile::Init(&buffer);
-         }
-         this->resFiles[2 + i] = (nw4r::g3d::ResFile *)buffer;
+         this->resFiles[2 + i] = loadFile(this->files[2 + i]);
 
          char str1[32];
          char str2[32];
@@ -399,22 +359,36 @@ void muIntroTask::loadCharModel()
          this->muObjects[i + 4] = newMu;
       }
    }
+   else if (this->mode == versus)
+   {
+      // for (int i = 0; i < 4; i++)
+      // {
+      //    fighter fighter = this->enemies[i];
+      //    s16 resID = ftCommonDataAccesser::getModelResId(fighter.slotNo, fighter.id, fighter.colour);
+      //    if (resID != -1)
+      //    {
+      //       this->resFiles[6 + i] = soArchiveDb::getManager()->getResFileFromId(resID, 2, 0, 0, -1); // gets main model file
+      //       // can get other parts (e.g. animation part) same way
+      //       MuObject *newMu = MuObject::create(&this->resFiles[6 + i], 0x1E - i, 0, 0, Heaps::MenuInstance);
+
+      //       // newMu->changeNodeAnimN(str2);
+      //       newMu->gfModelAnimation->m_anmObjChrRes->SetUpdateRate(1.0);
+      //       // newMu->changeClrAnimN(str2);
+      //       newMu->gfModelAnimation->m_anmObjMatClrRes->SetUpdateRate(1.0);
+      //       // newMu->changeVisAnimN(str3);
+      //       newMu->setFrameVisible(5.0);
+      //       newMu->gfModelAnimation->m_anmObjVisRes->SetUpdateRate(0.0);
+
+      //       this->muObjects[i + 16] = newMu;
+      //    }
+      // }
+   }
    // allies loop
    if (this->mode != breakTheTargets)
    {
       for (int i = 0; i < this->allyCount; i++)
       {
-         buffer = 0;
-         if (this->files[6 + i].getReturnStatus() != 0x15)
-         {
-            buffer = this->files[6 + i].getBuffer();
-            this->files[6 + i].release();
-         }
-         if (buffer != 0)
-         {
-            nw4r::g3d::ResFile::Init(&buffer);
-         }
-         this->resFiles[6 + i] = (nw4r::g3d::ResFile *)buffer;
+         this->resFiles[6 + i] = loadFile(this->files[6 + i]);
 
          char str1[32];
          char str2[32];
@@ -482,34 +456,42 @@ void muIntroTask::createCharModel()
    {
       return;
    }
-   this->files[1].readRequest("/menu/intro/enter/chrcmn.brres", Heaps::MenuResource, 0, 0);
-   if (this->mode == teams)
+   else if (this->mode == versus)
    {
-      char str1[32];
-      char str2[32];
-      char str3[32];
-      fighter enemy = this->enemies[0];
-      this->getEnemyResFileName(str1, str2, str3, enemy.charId, standardFighter);
-      this->files[2].readRequest(str1, Heaps::MenuInstance, 0, 0);
+      this->files[1].readRequest("/menu/intro/enter/chrcmn.brres", Heaps::MenuResource, 0, 0);
+      return;
    }
    else
    {
-      for (int i = 0; i < this->enemyCount; i++)
+      this->files[1].readRequest("/menu/intro/enter/chrcmn.brres", Heaps::MenuResource, 0, 0);
+      if (this->mode == teams)
       {
          char str1[32];
          char str2[32];
          char str3[32];
-         this->getEnemyResFileName(str1, str2, str3, this->enemies[i].charId, this->enemies[i].displayId);
-         this->files[2 + i].readRequest(str1, Heaps::MenuInstance, 0, 0);
+         fighter enemy = this->enemies[0];
+         this->getEnemyResFileName(str1, str2, str3, enemy.charId, standardFighter);
+         this->files[2].readRequest(str1, Heaps::MenuInstance, 0, 0);
       }
-   }
-   for (int i = 0; i < this->allyCount; i++)
-   {
-      char str1[32];
-      char str2[32];
-      char str3[32];
-      this->getEnemyResFileName(str1, str2, str3, this->allies[i].charId, this->allies[i].displayId);
-      this->files[6 + i].readRequest(str1, Heaps::MenuInstance, 0, 0);
+      else
+      {
+         for (int i = 0; i < this->enemyCount; i++)
+         {
+            char str1[32];
+            char str2[32];
+            char str3[32];
+            this->getEnemyResFileName(str1, str2, str3, this->enemies[i].charId, this->enemies[i].displayId);
+            this->files[2 + i].readRequest(str1, Heaps::MenuInstance, 0, 0);
+         }
+      }
+      for (int i = 0; i < this->allyCount; i++)
+      {
+         char str1[32];
+         char str2[32];
+         char str3[32];
+         this->getEnemyResFileName(str1, str2, str3, this->allies[i].charId, this->allies[i].displayId);
+         this->files[6 + i].readRequest(str1, Heaps::MenuInstance, 0, 0);
+      }
    }
 }
 
@@ -553,7 +535,27 @@ void muIntroTask::setProgressionMeter(int progression)
    scene->Insert(scene->sceneItemsCount, this->muObjects[3]->scnObj);
 }
 
-inline void muIntroTask::addScriptEntry(int id, int length)
+bool muIntroTask::addScriptFighterEntry(int fighterID)
+{
+   SndID charSfxId = (SndID)muMenu::exchangeSelchkind2SelCharVoice(fighterID);
+   if (charSfxId == -1)
+   {
+      return false;
+   }
+   int charLineLength;
+   if (g_GameGlobal->getLanguage() == 0)
+   {
+      charLineLength = muMenu::exchangeSelCharVoice2SelCharVoiceLengthE(fighterID);
+   }
+   else
+   {
+      charLineLength = muMenu::exchangeSelCharVoice2SelCharVoiceLengthJ(fighterID);
+   }
+   this->addScriptEntry(charSfxId, charLineLength);
+   return true;
+}
+
+inline void muIntroTask::addScriptEntry(SndID id, int length)
 {
    scriptEntry *script = &this->script[this->scriptCount++];
    script->id = id;
@@ -608,4 +610,67 @@ bool muIntroTask::isLoadFinished()
       }
    }
    return muMenu::isLoadFinishMenuSound();
+}
+
+void muIntroTask::initVersusData()
+{
+
+   this->progression = 0;
+   this->enemyCount = 0;
+   this->allyCount = 0;
+   this->mode = versus;
+
+   gmGlobalModeMelee *mode = g_GameGlobal->m_modeMelee;
+   bool isTeams = mode->m_meleeInitData.m_isTeams;
+
+   int team1ID = -1;
+   for (int i = 0; i < 4; i++)
+   {
+      gmPlayerInitData *player = &mode->m_playersInitData[i];
+      if (player->m_initState < 3)
+      {
+         int playerFighter = muMenu::exchangeGmCharacterKind2MuStockchkind(player->m_slotID);
+         int playerCostume = 0;
+         if (isTeams)
+         {
+            if (team1ID == -1)
+            {
+               team1ID = player->m_teamID;
+            }
+            if (player->m_teamID == team1ID)
+            {
+               this->allies[this->allyCount].charId = playerFighter;
+               this->allies[this->allyCount].displayId = playerCostume;
+               this->allyCount++;
+            }
+            else
+            {
+               this->enemies[this->enemyCount].charId = playerFighter;
+               this->enemies[this->enemyCount].displayId = playerCostume;
+               this->enemyCount++;
+            }
+         }
+         else
+         {
+            this->enemies[this->enemyCount].charId = playerFighter;
+            this->enemies[this->enemyCount].displayId = playerCostume;
+            this->enemyCount++;
+         }
+      }
+   }
+}
+
+static nw4r::g3d::ResFile *loadFile(muFileIOHandle file)
+{
+   void *buffer = 0;
+   if (file.getReturnStatus() != 0x15)
+   {
+      buffer = file.getBuffer();
+      file.release();
+   }
+   if (buffer != 0)
+   {
+      nw4r::g3d::ResFile::Init(&buffer);
+   }
+   return (nw4r::g3d::ResFile *)buffer;
 }
