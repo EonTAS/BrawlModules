@@ -206,14 +206,14 @@ void muIntroTask::getStageSetting()
       this->allyCount = _intro->allyCount;
       for (int i = 0; i < totalEnemies; i++)
       {
-         if (i < 3)
+         if (i < 3) // vanilla size
          {
             this->enemies[i] = _intro->enemies[i];
          }
       }
       for (int i = 0; i < totalAllies; i++)
       {
-         if (i < 2)
+         if (i < 2) // vanilla size
          {
             this->allies[i] = _intro->allies[i];
          }
@@ -325,7 +325,7 @@ void muIntroTask::loadCharModel()
       char str3[32];
       this->getEnemyResFileName(str1, str2, str3, this->enemies[0].charId, standardFighter);
       this->resFiles.enemies[0] = loadFile(this->files.enemies[0]);
-      for (int i = 0; i < 11; i++)
+      for (int i = 0; i < totalTeamPortraits; i++)
       {
          MuObject *newMu = MuObject::create(&this->resFiles.enemies[0], 0x1C - i, 0, 0, Heaps::MenuInstance);
          newMu->changeNodeAnimN(str2);
@@ -444,7 +444,7 @@ void muIntroTask::loadCharModel()
    if (this->mode == teams)
    {
       startingNode = 10;
-      totalEnemies = 11;
+      totalEnemies = totalTeamPortraits;
    }
    else if (this->mode == breakTheTargets)
    {
@@ -600,11 +600,11 @@ muIntroTask::muIntroTask() : gfTask("Intro", 8, 0xf, 8, 1)
    this->muObjects.misc1 = 0;
    this->muObjects.misc2 = 0;
    this->muObjects.allyPointer = 0;
-   for (int i = 0; i < 11; i++)
+   for (int i = 0; i < totalTeamPortraits; i++)
    {
       this->muObjects.enemies[i] = 0;
    }
-   for (int i = 0; i < 2; i++)
+   for (int i = 0; i < totalAllies; i++)
    {
       this->muObjects.allies[i] = 0;
    }
@@ -614,11 +614,11 @@ muIntroTask::muIntroTask() : gfTask("Intro", 8, 0xf, 8, 1)
    this->files.mainScene = muFileIOHandle();
    this->files.charCommon = muFileIOHandle();
    this->files.miniGame = muFileIOHandle();
-   for (int i = 0; i < 3; i++)
+   for (int i = 0; i < totalEnemies; i++)
    {
       this->files.enemies[i] = muFileIOHandle();
    }
-   for (int i = 0; i < 2; i++)
+   for (int i = 0; i < totalAllies; i++)
    {
       this->files.enemies[i] = muFileIOHandle();
    }
@@ -626,11 +626,11 @@ muIntroTask::muIntroTask() : gfTask("Intro", 8, 0xf, 8, 1)
    this->resFiles.mainScene = 0;
    this->resFiles.charCommon = 0;
    this->resFiles.miniGame = 0;
-   for (int i = 0; i < 3; i++)
+   for (int i = 0; i < totalEnemies; i++)
    {
       this->resFiles.enemies[i] = 0;
    }
-   for (int i = 0; i < 2; i++)
+   for (int i = 0; i < totalAllies; i++)
    {
       this->resFiles.enemies[i] = 0;
    }
@@ -649,11 +649,11 @@ muIntroTask::~muIntroTask()
    delete this->muObjects.misc1;
    delete this->muObjects.misc2;
    delete this->muObjects.allyPointer;
-   for (int i = 0; i < 11; i++)
+   for (int i = 0; i < totalTeamPortraits; i++)
    {
       delete this->muObjects.enemies[i];
    }
-   for (int i = 0; i < 2; i++)
+   for (int i = 0; i < totalAllies; i++)
    {
       delete this->muObjects.allies[i];
    }
@@ -661,11 +661,11 @@ muIntroTask::~muIntroTask()
    this->files.mainScene.cancelRequest();
    this->files.charCommon.cancelRequest();
    this->files.miniGame.cancelRequest();
-   for (int i = 0; i < 3; i++)
+   for (int i = 0; i < totalEnemies; i++)
    {
       this->files.enemies[i].cancelRequest();
    }
-   for (int i = 0; i < 2; i++)
+   for (int i = 0; i < totalAllies; i++)
    {
       this->files.enemies[i].cancelRequest();
    }
@@ -673,11 +673,11 @@ muIntroTask::~muIntroTask()
    delete this->resFiles.mainScene;
    delete this->resFiles.charCommon;
    delete this->resFiles.miniGame;
-   for (int i = 0; i < 3; i++)
+   for (int i = 0; i < totalEnemies; i++)
    {
       delete this->resFiles.enemies[i];
    }
-   for (int i = 0; i < 2; i++)
+   for (int i = 0; i < totalAllies; i++)
    {
       delete this->resFiles.enemies[i];
    }
@@ -690,12 +690,12 @@ bool muIntroTask::isLoadFinished()
       return false;
    if (!this->files.miniGame.isReady())
       return false;
-   for (int i = 0; i < 3; i++)
+   for (int i = 0; i < totalEnemies; i++)
    {
       if (!this->files.enemies[i].isReady())
          return false;
    }
-   for (int i = 0; i < 2; i++)
+   for (int i = 0; i < totalAllies; i++)
    {
       if (!this->files.allies[i].isReady())
          return false;

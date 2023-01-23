@@ -6,6 +6,7 @@
 #include <mu/mu_object.h>
 #include <gf/gf_task.h>
 #include <snd/snd_id.h>
+#include <StaticAssert.h>
 
 struct scriptEntry
 {
@@ -51,6 +52,8 @@ enum displayType
 
 const int totalEnemies = 3;
 const int totalAllies = 2;
+const int totalTeamPortraits = 11;
+STATIC_CHECK(totalEnemies <= totalTeamPortraits);
 
 class muIntroTask : public gfTask
 {
@@ -59,9 +62,9 @@ protected:
     {
         nw4r::g3d::ResFile *mainScene;
         nw4r::g3d::ResFile *charCommon;
-        nw4r::g3d::ResFile *enemies[3];
+        nw4r::g3d::ResFile *enemies[totalEnemies];
         nw4r::g3d::ResFile *miniGame;
-        nw4r::g3d::ResFile *allies[2];
+        nw4r::g3d::ResFile *allies[totalAllies];
     } resFiles;
 
     struct
@@ -70,9 +73,9 @@ protected:
         MuObject *stageProgess;
         MuObject *misc1;
         MuObject *misc2;
-        MuObject *enemies[11];
+        MuObject *enemies[totalTeamPortraits];
         MuObject *allyPointer;
-        MuObject *allies[2];
+        MuObject *allies[totalAllies];
     } muObjects;
 
     nw4r::g3d::ScnMdl *scnMdl; // G3dObjFv
@@ -89,9 +92,9 @@ protected:
     {
         muFileIOHandle mainScene;
         muFileIOHandle charCommon;
-        muFileIOHandle enemies[3];
+        muFileIOHandle enemies[totalEnemies];
         muFileIOHandle miniGame;
-        muFileIOHandle allies[2];
+        muFileIOHandle allies[totalAllies];
     } files;
 
     //  0x108
