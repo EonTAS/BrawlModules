@@ -16,6 +16,8 @@
 #include <snd/snd_id.h>
 #include <TRK/flushcache.h>
 #include <gm/gm_global.h>
+#include <gf/gf_pad.h>
+#include <gf/gf_homemenu.h>
 
 const scriptEntry typeVoiceLines[] = {{snd_se_invalid, 0}, {snd_se_invalid, 0}, {snd_se_menu_Narration_Giant, 0x27}, {snd_se_menu_Narration_Metal, 0x31}};
 
@@ -28,13 +30,26 @@ static muObjectFlags panelList[] = {
     {"ItrSimplePanel0002_TopN", misc2, 0x1F},
     {"ItrSimplePanel0010_TopN", allyPointer, 0x20},
 };
+#define PRELOAD true
+
+#if PRELOAD
+#define instanceHeap Heaps::MenuInstance
+#define resourceHeap Heaps::Network
+#else
+#define instanceHeap Heaps::MenuInstance
+#define resourceHeap Heaps::MenuResource
+#endif
 muIntroTask *muIntroTask::create()
 {
-   muIntroTask *intro = new (Heaps::MenuInstance) muIntroTask();
+   muIntroTask *intro = new (instanceHeap) muIntroTask();
+
+   g_gfHomeMenu->setBan(1, 1);
+   g_gfHomeMenu->releaseResource();
+
    // load settings that are set externally
    intro->getStageSetting();
    // load scene
-   intro->files.mainScene.readRequest("/menu/intro/enter/cmn.brres", Heaps::MenuResource, 0, 0);
+   intro->files.mainScene.readRequest("/menu/intro/enter/cmn.brres", resourceHeap, 0, 0);
    if (intro->mode != breakTheTargets)
    {
       // request load of all portrait files
@@ -45,11 +60,11 @@ muIntroTask *muIntroTask::create()
       // request load of BTT file
       char filename[32];
       sprintf(filename, "/menu/intro/enter/mini%d.brres", 1);
-      intro->files.miniGame.readRequest(filename, Heaps::MenuResource, 0, 0);
+      intro->files.miniGame.readRequest(filename, resourceHeap, 0, 0);
    }
    muMenu::loadMenuSound();
    intro->commonFilePre = 0;
-   intro->soundScriptStarted = 0;
+   intro->soundScriptStarted = false;
 
    // interpret situation to create a script for the announcer
    intro->makeSoundScript();
@@ -73,7 +88,7 @@ muIntroTask *muIntroTask::create()
 extern gfGameApplication *g_gfGameApplication;
 void muIntroTask::processDefault()
 {
-   if (this->soundScriptStarted == 0)
+   if (!this->soundScriptStarted)
    {
       if (isLoadFinished())
       {
@@ -83,32 +98,52 @@ void muIntroTask::processDefault()
    }
    else
    {
-      scriptEntry *currentVoiceLine = &this->script[scriptCurrent];
-      // if on first frame of line, say the line
-      if (this->voiceLineCurrentTime == 0)
+      this->playSoundScript();
+
+      for (int i = 0; i < 8; i++)
       {
-         g_sndSystem->playSE(currentVoiceLine->id, -1, 0, 0, -1);
-      }
-      this->voiceLineCurrentTime++;
-      // if line finished, go to next line
-      if (this->voiceLineCurrentTime >= currentVoiceLine->length)
-      {
-         this->voiceLineCurrentTime = 0;
-         this->scriptCurrent++;
-      }
-      // if script finished, tell scene manager
-      if (this->scriptCurrent >= this->scriptCount)
-      {
-         gfSceneManager *scnManager = gfSceneManager::getInstance();
-         scnManager->unk1 = 0;
-         scnManager->processStep = 2; // tell manager to move to next scene
+         gfPadStatus pad;
+         g_gfPadSystem->getSysPadStatus(i, &pad);
+         if (pad.buttonMask & START)
+         {
+            endScene();
+         }
       }
    }
 }
+void muIntroTask::playSoundScript()
+{
+   scriptEntry *currentVoiceLine = &this->script[this->scriptCurrent];
+   // if on first frame of line, say the line
+   if (this->voiceLineCurrentTime == 0)
+   {
+      g_sndSystem->playSE(currentVoiceLine->id, -1, 0, 0, -1);
+   }
+   this->voiceLineCurrentTime++;
+   // if line finished, go to next line
+   if (this->voiceLineCurrentTime >= currentVoiceLine->length)
+   {
+      this->voiceLineCurrentTime = 0;
+      this->scriptCurrent++;
+   }
+   // if script finished, tell scene manager
+   if (this->scriptCurrent >= this->scriptCount - 1)
+   {
+      g_sndSystem->playSE(this->script[this->scriptCurrent].id, -1, 0, 0, -1);
+      endScene();
+   }
+}
 
+void endScene()
+{
+   gfSceneManager *scnManager = gfSceneManager::getInstance();
+   scnManager->unk1 = 0;
+   scnManager->processStep = 2; // tell manager to move to next scene
+   g_gfHomeMenu->setBan(1, 1);
+}
 void muIntroTask::init()
 {
-   this->resFiles.mainScene = loadFile(this->files.mainScene);
+   this->resFiles.mainScene = loadFile(&this->files.mainScene);
    this->createMuObjects(mapFileList, 1, &this->resFiles.mainScene);
 
    if (this->mode != breakTheTargets)
@@ -117,13 +152,13 @@ void muIntroTask::init()
    }
    else
    {
-      this->resFiles.allies[1] = loadFile(this->files.miniGame);
-      this->muObjects.enemies[0] = MuObject::create(&this->resFiles.allies[1], 18, (char)0, 0, Heaps::MenuInstance);
+      this->resFiles.allies[1] = loadFile(&this->files.miniGame);
+      this->muObjects.enemies[0] = MuObject::create(&this->resFiles.allies[1], 18, (char)0, 0, instanceHeap);
    }
    g_gfGameApplication->keepFB.endKeepScreen();
    char str[32];
    sprintf(str, "ItrSimpleMap0000_TopN__%d", this->progression + 1);
-   MuObject *currentMu = this->muObjects.enemies[0];
+   MuObject *currentMu = this->muObjects.mainScene;
    currentMu->changeNodeAnimNIf(str);
    currentMu->changeVisAnimNIf(str);
    currentMu->changeTexPatAnimNIf(str);
@@ -151,7 +186,7 @@ void muIntroTask::init()
    muMenu::startRumbleController(_intro->activeController, 0x14, rumble);
    g_sndSystem->playSE(snd_se_system_044, -1, 0, 0, -1);
    this->commonFilePre = 0;
-   this->soundScriptStarted = 1;
+   this->soundScriptStarted = true;
 }
 
 void muIntroTask::createMuObjects(muObjectFlags data[], int num, nw4r::g3d::ResFile **resFile)
@@ -159,7 +194,7 @@ void muIntroTask::createMuObjects(muObjectFlags data[], int num, nw4r::g3d::ResF
    for (int i = 0; i < num; i++)
    {
       muObjectFlags currData = data[i];
-      MuObject *result = MuObject::create(resFile, currData.node, currData.flag, 0, Heaps::MenuInstance);
+      MuObject *result = MuObject::create(resFile, currData.node, currData.flag, 0, instanceHeap);
       switch (currData.id)
       {
       case mainScene:
@@ -195,7 +230,7 @@ void muIntroTask::getStageSetting()
 
    gfSceneManager *manager = gfSceneManager::getInstance();
 
-   if (manager->m_currentScene->m_sceneName == "sqSingleSimple")
+   if (strcmp(manager->m_currentSequence->m_sequenceName, "sqSingleSimple") == 0)
    {
       // classic mode load data that is set up natively into memory
       scIntro *_intro = (scIntro *)manager->m_currentScene;
@@ -264,12 +299,8 @@ void muIntroTask::makeSoundScript()
             this->addScriptEntry(snd_se_menu_Narration_And, 0x2B); // "AND"
          }
       }
-      int prefixIndex;
-      if (this->mode == teams)
-      {
-         prefixIndex = standardFighter;
-      }
-      else if (this->mode == standard)
+      int prefixIndex = standardFighter;
+      if (this->mode == standard)
       {
          prefixIndex = this->enemies[i].displayId;
       }
@@ -313,21 +344,20 @@ void muIntroTask::makeSoundScript()
 }
 void muIntroTask::loadCharModel()
 {
-   this->resFiles.charCommon = loadFile(this->files.charCommon);
+   this->resFiles.charCommon = loadFile(&this->files.charCommon);
    this->createMuObjects(panelList, 4, &this->resFiles.charCommon);
-   this->scnMdl = nw4r::g3d::ScnMdl::Construct(gfHeapManager::getMEMAllocator(Heaps::MenuInstance), 0, 0xD, this->muObjects.misc1->scnObj);
+   this->scnMdl = nw4r::g3d::ScnMdl::Construct(gfHeapManager::getMEMAllocator(instanceHeap), 0, 0xD, this->muObjects.misc1->scnObj);
 
    if (this->mode == teams)
    {
-
       char str1[32];
       char str2[32];
       char str3[32];
       this->getEnemyResFileName(str1, str2, str3, this->enemies[0].charId, standardFighter);
-      this->resFiles.enemies[0] = loadFile(this->files.enemies[0]);
+      this->resFiles.enemies[0] = loadFile(&this->files.enemies[0]);
       for (int i = 0; i < totalTeamPortraits; i++)
       {
-         MuObject *newMu = MuObject::create(&this->resFiles.enemies[0], 0x1C - i, 0, 0, Heaps::MenuInstance);
+         MuObject *newMu = MuObject::create(&this->resFiles.enemies[0], 0x1C - i, 0, 0, instanceHeap);
          newMu->changeNodeAnimN(str2);
          newMu->gfModelAnimation->m_anmObjChrRes->SetUpdateRate(1.0);
          newMu->changeClrAnimN(str2);
@@ -351,13 +381,13 @@ void muIntroTask::loadCharModel()
    {
       for (int i = 0; i < this->enemyCount; i++)
       {
-         this->resFiles.enemies[i] = loadFile(this->files.enemies[i]);
+         this->resFiles.enemies[i] = loadFile(&this->files.enemies[i]);
 
          char str1[32];
          char str2[32];
          char str3[32];
          this->getEnemyResFileName(str1, str2, str3, this->enemies[i].charId, this->enemies[i].displayId);
-         MuObject *newMu = MuObject::create(&this->resFiles.enemies[i], 0x1C - i, 0, 0, Heaps::MenuInstance);
+         MuObject *newMu = MuObject::create(&this->resFiles.enemies[i], 0x1C - i, 0, 0, instanceHeap);
 
          newMu->changeNodeAnimN(str2);
          newMu->gfModelAnimation->m_anmObjChrRes->SetUpdateRate(1.0);
@@ -400,7 +430,7 @@ void muIntroTask::loadCharModel()
       //    {
       //       this->resFiles[6 + i] = soArchiveDb::getManager()->getResFileFromId(resID, 2, 0, 0, -1); // gets main model file
       //       // can get other parts (e.g. animation part) same way
-      //       MuObject *newMu = MuObject::create(&this->resFiles[6 + i], 0x1E - i, 0, 0, Heaps::MenuInstance);
+      //       MuObject *newMu = MuObject::create(&this->resFiles[6 + i], 0x1E - i, 0, 0, instanceHeap);
 
       //       // newMu->changeNodeAnimN(str2);
       //       newMu->gfModelAnimation->m_anmObjChrRes->SetUpdateRate(1.0);
@@ -419,13 +449,13 @@ void muIntroTask::loadCharModel()
    {
       for (int i = 0; i < this->allyCount; i++)
       {
-         this->resFiles.allies[i] = loadFile(this->files.allies[i]);
+         this->resFiles.allies[i] = loadFile(&this->files.allies[i]);
 
          char str1[32];
          char str2[32];
          char str3[32];
          this->getEnemyResFileName(str1, str2, str3, this->allies[i].charId, this->allies[i].displayId);
-         MuObject *newMu = MuObject::create(&this->resFiles.allies[i], 0x1E - i, 0, 0, Heaps::MenuInstance);
+         MuObject *newMu = MuObject::create(&this->resFiles.allies[i], 0x1E - i, 0, 0, instanceHeap);
 
          newMu->changeNodeAnimN(str2);
          newMu->gfModelAnimation->m_anmObjChrRes->SetUpdateRate(1.0);
@@ -435,7 +465,7 @@ void muIntroTask::loadCharModel()
          newMu->setFrameVisible(5.0);
          newMu->gfModelAnimation->m_anmObjVisRes->SetUpdateRate(0.0);
 
-         this->muObjects.allies[16] = newMu;
+         this->muObjects.allies[i] = newMu;
       }
    }
    // continue at line 283
@@ -487,14 +517,14 @@ void muIntroTask::createCharModel()
    {
       return;
    }
-   else if (this->mode == versus)
-   {
-      this->files.charCommon.readRequest("/menu/intro/enter/chrcmn.brres", Heaps::MenuResource, 0, 0);
-      return;
-   }
+   // else if (this->mode == versus)
+   // {
+   //    this->files.charCommon.readRequest("/menu/intro/enter/chrcmn.brres", resourceHeap, 0, 0);
+   //    return;
+   // }
    else
    {
-      this->files.charCommon.readRequest("/menu/intro/enter/chrcmn.brres", Heaps::MenuResource, 0, 0);
+      this->files.charCommon.readRequest("/menu/intro/enter/chrcmn.brres", resourceHeap, 0, 0);
       if (this->mode == teams)
       {
          char str1[32];
@@ -502,7 +532,7 @@ void muIntroTask::createCharModel()
          char str3[32];
          fighter enemy = this->enemies[0];
          this->getEnemyResFileName(str1, str2, str3, enemy.charId, standardFighter);
-         this->files.enemies[0].readRequest(str1, Heaps::MenuInstance, 0, 0);
+         this->files.enemies[0].readRequest(str1, instanceHeap, 0, 0);
       }
       else
       {
@@ -512,7 +542,7 @@ void muIntroTask::createCharModel()
             char str2[32];
             char str3[32];
             this->getEnemyResFileName(str1, str2, str3, this->enemies[i].charId, this->enemies[i].displayId);
-            this->files.enemies[i].readRequest(str1, Heaps::MenuInstance, 0, 0);
+            this->files.enemies[i].readRequest(str1, instanceHeap, 0, 0);
          }
       }
       for (int i = 0; i < this->allyCount; i++)
@@ -521,7 +551,7 @@ void muIntroTask::createCharModel()
          char str2[32];
          char str3[32];
          this->getEnemyResFileName(str1, str2, str3, this->allies[i].charId, this->allies[i].displayId);
-         this->files.allies[i].readRequest(str1, Heaps::MenuInstance, 0, 0);
+         this->files.allies[i].readRequest(str1, instanceHeap, 0, 0);
       }
    }
 }
@@ -632,7 +662,7 @@ muIntroTask::muIntroTask() : gfTask("Intro", 8, 0xf, 8, 1)
    }
    for (int i = 0; i < totalAllies; i++)
    {
-      this->resFiles.enemies[i] = 0;
+      this->resFiles.allies[i] = 0;
    }
    this->scriptCurrent = 0;
    this->scriptCount = 0;
@@ -644,6 +674,7 @@ muIntroTask::muIntroTask() : gfTask("Intro", 8, 0xf, 8, 1)
 muIntroTask::~muIntroTask()
 {
    delete this->scnMdl;
+
    delete this->muObjects.mainScene;
    delete this->muObjects.stageProgess;
    delete this->muObjects.misc1;
@@ -679,7 +710,7 @@ muIntroTask::~muIntroTask()
    }
    for (int i = 0; i < totalAllies; i++)
    {
-      delete this->resFiles.enemies[i];
+      delete this->resFiles.allies[i];
    }
 }
 bool muIntroTask::isLoadFinished()
@@ -706,7 +737,7 @@ bool muIntroTask::isLoadFinished()
 
 void muIntroTask::initVersusData()
 {
-
+   // default state of stuff, unused
    this->progression = 0;
    this->enemyCount = 0;
    this->allyCount = 0;
@@ -715,13 +746,14 @@ void muIntroTask::initVersusData()
    gmGlobalModeMelee *mode = g_GameGlobal->m_modeMelee;
    bool isTeams = mode->m_meleeInitData.m_isTeams;
 
+   // first team ID, once a team is established, each member will be together on this side
    int team1ID = -1;
-   for (int i = 0; i < 4; i++)
+   for (int i = 0; i < 4; i++) // for each port
    {
       gmPlayerInitData *player = &mode->m_playersInitData[i];
-      if (player->m_initState < 3)
+      if (player->m_initState < 3) // if port in use (0 = player, 1 = cpu)
       {
-         int playerFighter = muMenu::exchangeGmCharacterKind2MuStockchkind(player->m_slotID);
+         int playerFighter = muMenu::exchangeGmCharacterKind2MuStockchkind(player->m_slotID); // convert to fighter stock id
          int playerCostume = 0;
          if (isTeams)
          {
@@ -752,13 +784,13 @@ void muIntroTask::initVersusData()
    }
 }
 
-static nw4r::g3d::ResFile *loadFile(muFileIOHandle file)
+static nw4r::g3d::ResFile *loadFile(muFileIOHandle *file)
 {
    void *buffer = 0;
-   if (file.getReturnStatus() != 0x15)
+   if (file->getReturnStatus() != 0x15)
    {
-      buffer = file.getBuffer();
-      file.release();
+      buffer = file->getBuffer();
+      file->release();
    }
    if (buffer != 0)
    {

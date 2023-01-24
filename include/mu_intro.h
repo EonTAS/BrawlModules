@@ -55,6 +55,8 @@ const int totalAllies = 2;
 const int totalTeamPortraits = 11;
 STATIC_CHECK(totalEnemies <= totalTeamPortraits);
 
+const int maxScriptEntries = 16;
+
 class muIntroTask : public gfTask
 {
 protected:
@@ -66,7 +68,6 @@ protected:
         nw4r::g3d::ResFile *miniGame;
         nw4r::g3d::ResFile *allies[totalAllies];
     } resFiles;
-
     struct
     {
         MuObject *mainScene;
@@ -77,17 +78,6 @@ protected:
         MuObject *allyPointer;
         MuObject *allies[totalAllies];
     } muObjects;
-
-    nw4r::g3d::ScnMdl *scnMdl; // G3dObjFv
-    // 0xAC
-    int progression;
-    modeType mode;
-    int enemyCount;
-    fighter enemies[totalEnemies];
-    int allyCount;
-    fighter allies[totalAllies];
-    // 0xE4
-    int commonFilePre;
     struct
     {
         muFileIOHandle mainScene;
@@ -96,13 +86,18 @@ protected:
         muFileIOHandle miniGame;
         muFileIOHandle allies[totalAllies];
     } files;
+    int commonFilePre;
+    nw4r::g3d::ScnMdl *scnMdl; // G3dObjFv
 
-    //  0x108
-    char soundScriptStarted;
-    char _soundScriptStarted[0x3];
-    // 0x10C
-    scriptEntry script[0x10];
-    // 0x18C
+    int progression;
+    modeType mode;
+    int enemyCount;
+    fighter enemies[totalEnemies];
+    int allyCount;
+    fighter allies[totalAllies];
+
+    scriptEntry script[maxScriptEntries];
+    bool soundScriptStarted;
     int scriptCount;
     int scriptCurrent;
     int voiceLineCurrentTime;
@@ -127,7 +122,10 @@ public:
     void init();
     void initVersusData();
     virtual void processDefault();
+    void playSoundScript();
     virtual ~muIntroTask();
 };
 
-static nw4r::g3d::ResFile *loadFile(muFileIOHandle file);
+void endScene();
+
+static nw4r::g3d::ResFile *loadFile(muFileIOHandle *file);
