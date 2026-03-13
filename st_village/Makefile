@@ -31,7 +31,7 @@ LD 			:= $(TOPDIR)/../tools/MWCC4_2/mwldeppc.exe
 ELF2REL		:= $(TOPDIR)/../tools/elf2rel.exe
 
 
-CCFLAGS		:= -Cpp_exceptions off -c -proc gekko -nostdinc -O4,p -inline auto -fp hard -u _prolog -u _epilog -u _unresolved -enum int -sdata 0 -sdata2 0 -func_align 4
+CCFLAGS		:= -msgstyle gcc -lang=c99 -Cpp_exceptions off -c -proc gekko -nostdinc -O4,p -inline auto -fp hard -u _prolog -u _epilog -u _unresolved -enum min -min_enum_size 4 -sdata 0 -sdata2 0 -func_align 4
 CXXFLAGS	:= -lang=c++ $(CCFLAGS)
 LDFLAGS		:= -lcf $(LCF) -r1 -fp hard -m _prolog -g -unused
 
@@ -83,8 +83,12 @@ export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 			-I$(CURDIR)/../lib/PowerPC_EABI_Support/Runtime/Inc \
 			-I$(CURDIR)/../lib/BrawlHeaders/Brawl/Include \
 			-I$(CURDIR)/../lib/BrawlHeaders/nw4r/include \
-			-I$(CURDIR)/../lib/BrawlHeaders/rvl/Include \
-			-I$(CURDIR)/../lib/BrawlHeaders/std/Include \
+			-I$(CURDIR)/../lib/BrawlHeaders/hk410/include \
+			-I$(CURDIR)/../lib/BrawlHeaders/OpenRVL/include/ \
+			-I$(CURDIR)/../lib/BrawlHeaders/OpenRVL/include/MetroTRK \
+			-I$(CURDIR)/../lib/BrawlHeaders/OpenRVL/include/revolution \
+			-I$(CURDIR)/../lib/BrawlHeaders/OpenRVL/include/RVLFaceLib \
+			-I$(CURDIR)/../lib/BrawlHeaders/OpenRVL/include/stl \
 			-I$(CURDIR)/../lib/BrawlHeaders/utils/include \
 
 #---------------------------------------------------------------------------------

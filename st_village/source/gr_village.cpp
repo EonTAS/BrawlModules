@@ -1,15 +1,32 @@
 #include "gr_village.h"
 #include <memory.h>
 
-grVillage* grVillage::create(int mdlIndex, char* tgtNodeName, char* taskName)
+grVillage::grVillage(const char* taskName) : grYakumono(taskName)
+{
+    m_sceneWork = 0;
+    m_stateWork = 0;
+    m_guestPositionsWork = NULL;
+    m_sceneBit = 0;
+    m_unk1 = 0;
+    m_unkFloat = UNK_FLOAT;
+}
+grVillage::~grVillage()
+{
+    // TODO
+}
+
+grVillage* grVillage::create(int mdlIndex, const char* tgtNodeName, const char* taskName)
 {
     grVillage* ground = new (Heaps::StageInstance) grVillage(taskName);
-    ground->setupMelee();
-    ground->setMdlIndex(mdlIndex);
-    ground->setTgtNode(tgtNodeName);
+    if (ground != NULL)
+    {
+        ground->setupMelee();
+        ground->setMdlIndex(mdlIndex);
+        ground->setTgtNode(tgtNodeName);
+    }
     return ground;
 }
-void grVillage::setSceneWork(u32* sceneWork)
+void grVillage::setSceneWork(char* sceneWork)
 {
     m_sceneWork = sceneWork;
 }
@@ -17,13 +34,13 @@ void grVillage::setSceneBit(char sceneBit)
 {
     m_sceneBit = sceneBit;
 }
-void grVillage::setStateWork(u32* stateWork)
+void grVillage::setStateWork(char* stateWork)
 {
     m_stateWork = stateWork;
 }
-void grVillage::setPosGuestWork(u32* posGuestWork)
+void grVillage::setPosGuestWork(stVillageGuestPos* villageGuestPositions)
 {
-    m_posGuestWork = posGuestWork;
+    m_guestPositionsWork = villageGuestPositions;
 }
 bool grVillage::isSceneBit()
 {
@@ -36,98 +53,30 @@ bool grVillage::isSceneBit()
         return true;
     }
 
-    return *m_sceneWork > 0;
+    return m_sceneBit & (*m_sceneWork << 1) >> 0x1F;
 }
 void grVillage::update(float deltaFrame)
 {
     grGimmick::update(deltaFrame);
 
-    if (unk3)
+    if (m_isUpdate)
     {
-        this->updateVisible(m_unk1);
+        this->updateVisible(deltaFrame);
     }
 }
 void grVillage::updateVisible(float unk1)
 {
     if (m_sceneWork == NULL)
         return;
+
     if (m_sceneBit == 0)
         return;
 
-    if ((*m_sceneWork * 2) & m_sceneBit)
+    if (m_sceneBit & (*m_sceneWork << 1))
     {
         this->setVisibility(1);
         return;
     }
 
     this->setVisibility(0);
-}
-
-int grVillage::adventureEventGetItem()
-{
-    return 0;
-}
-int grVillage::getInitializeInfo()
-{
-    return 0;
-}
-// NEEDS PARAMS
-// not needed for stFinal though.
-void grVillage::setInitializeInfo()
-{
-    return;
-}
-// NEEDS PARAMS
-// not needed for stFinal though.
-void grVillage::setInitializeFlag()
-{
-    return;
-}
-void grVillage::disableCalcCollision()
-{
-    this->m_calcCollisionEnable &= 0xf7;
-}
-void grVillage::enableCalcCollision()
-{
-    this->m_calcCollisionEnable |= 8;
-}
-bool grVillage::isEnableCalcCollision()
-{
-    return this->m_calcCollisionEnable >> 3 & 1;
-}
-short grVillage::getMdlIndex()
-{
-    return this->m_mdlIndex;
-}
-// TODO
-// possibly has params. unused in stFinal though.
-void grVillage::initStageData()
-{
-    return;
-}
-void* grVillage::getStageData()
-{
-    return this->m_stageData;
-}
-int grVillage::getModelCount()
-{
-    if (m_resFile.IsValid())
-    {
-        return m_resFile.GetResMdlNumEntries();
-    }
-    return 0;
-}
-
-char grVillage::getTransparencyFlag()
-{
-    return this->m_transparencyFlag;
-}
-
-void* grVillage::getGimmickData()
-{
-    return this->m_gimmickData;
-}
-void grVillage::setGimmickData(void* data)
-{
-    this->m_gimmickData = data;
 }

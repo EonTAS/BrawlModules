@@ -1,34 +1,34 @@
 #include "gr_village_sky.h"
-#include <GX/GXColor.h>
+#include <GX.h>
 #include <nw4r/g3d/g3d_resmat.h>
 #include <nw4r/g3d/g3d_resmdl.h>
 #include <nw4r/g3d/g3d_scnmdl.h>
 
 using namespace nw4r::g3d;
 
-grVillageSky* grVillageSky::create(int mdlIndex, char* tgtNodeName, char* taskName)
+grVillageSky* grVillageSky::create(int mdlIndex, const char* tgtNodeName, const char* taskName)
 {
     grVillageSky* sky = new (Heaps::StageInstance) grVillageSky(taskName);
     sky->setMdlIndex(mdlIndex);
     sky->setTgtNode(tgtNodeName);
     return sky;
 }
+void grVillageSky::update(float deltaFrame)
+{
+    grVillage::update(deltaFrame);
+}
 
 void grVillageSky::changeColor()
 {
     if (this->unk1 != *this->m_sceneWork)
     {
-        ResMat skyMat;
-        ResMat cloudMat;
-        ResMatTevColor skyColor;
-        ResMatTevColor cloudColor;
-
         nw4r::g3d::ScnMdl* model = this->m_sceneModels[0];
-        if (model != NULL)
-        {
-            skyMat = model->m_resMdl.GetResMat("enkeiSky");
-            cloudMat = model->m_resMdl.GetResMat("enkeiCloud");
-        }
+
+        if (model == NULL)
+            return;
+
+        ResMat skyMat = model->m_resMdl.GetResMat("enkeiSky");
+        ResMat cloudMat = model->m_resMdl.GetResMat("enkeiCloud");
 
         if (skyMat.IsValid() && cloudMat.IsValid())
         {

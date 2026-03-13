@@ -13,17 +13,19 @@ class grTargetSmashTarget : public grMadein
         float* totalDamageWork;
 
     public:
-        grTargetSmashTarget(char* taskName) : grMadein(taskName) {
+        grTargetSmashTarget(const char* taskName) : grMadein(taskName) {
         };
         virtual ~grTargetSmashTarget() { };
-        virtual void startup(gfArchive* archive, u32 unk1, u32 unk2);
+        virtual void startup(gfArchive* archive, u32 unk1, gfSceneRoot::LayerType layerType);
         virtual void update(float deltaFrame);
         virtual void onDamage(int index, soDamage* damage, soDamageAttackerInfo* attackerInfo);
         virtual void setupHitPoint();
+        virtual void setupAttack(AttackData* attackData);
         virtual void setTargetInfo(int motionPathIndex, int effectIndex, u32* targetsHitWork, u32* targetsLeftWork,
                                    u32* numTargetsHitPerPlayerWork, float* totalDamageWork, int mode);
+        virtual void updateEffect(float deltaFrame);
 
-        static grTargetSmashTarget* create(int mdlIndex, char* tgtNodeName, char* taskName);
+        static grTargetSmashTarget* create(int mdlIndex, const char* tgtNodeName, const char* taskName);
 
 
 };

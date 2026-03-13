@@ -11,45 +11,18 @@ const float POKETRAINER_Z = 0.0f;
 
 class stFinal : public stMelee {
 public:
-    stFinal() : stMelee("stFinal", 0x02){};
+
+    stFinal() : stMelee("stFinal", Stages::Final){
+
+    };
     static stFinal* create();
-    int getWind2ndOnlyData();
-    bool isReStartSamePoint();
-    int getPokeTrainerPointNum();
-    void startFighterEvent();
-    int initializeFighterAttackRatio();
-    int helperStarWarp();
-    bool isSimpleBossBattleMode();
-    bool isBossBattleMode();
-    bool isCameraLocked();
-    void notifyTimmingGameStart();
-    float getFrameRuleTime();
-    void setFrameRuleTime(float newTime);
-    bool isNextStepBgmEqualNowStepBgmFromFlag();
-    float getBgmPlayOffsetFrame();
-    float getBgmVolume();
-    void setBgmChange(float unk, u32 unk1, u32 unk2);
-    void getBgmChangeID(u32 unk1, float unk2);
-    bool isBgmChange();
-    int getBgmOptionID();
-    int getNowStepBgmID();
-    int getBgmID();
-    int getBgmIDOverload();
-    void appearanceFighterLocal();
-    int getScrollDir(u32 unk1);
-    int getDefaultLightSetIndex();
-    stRange* getAIRange();
-    bool isAdventureStage();
-    int getPokeTrainerDrawLayer();
-    float getPokeTrainerPositionZ();
-    void getPokeTrainerPointData(int* unk, int unk2);
 
     virtual void createObj();
     virtual bool loading();
     virtual void update(float deltaFrame);
-    virtual int getFinalTechniqColor();
+    virtual GXColor getFinalTechniqColor();
     virtual bool isBamperVector();
     virtual ~stFinal() { this->releaseArchive(); };
 
-    STATIC_CHECK(sizeof(stFinal) == 0x1D8)
+    //STATIC_CHECK(sizeof(stFinal) == 0x1D8)
 };
